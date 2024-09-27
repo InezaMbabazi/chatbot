@@ -6,8 +6,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 # Title of the chatbot app
 st.title("Kepler College Chatbot")
 
-# Load or define the bot data (replace this with your actual dataset)
-# Ensure both lists are of the same length
+# Load or define the bot data with updated user input and bot responses
 bot_data = {
     'User_Input': [
         'hello', 'how are you', 'bye', 'thanks',
@@ -113,53 +112,48 @@ bot_data = {
         'There are two main intakes in January and September each year.', 
         'The January intake begins classes in mid-January.', 
         'Kepler maintains a favorable student-to-faculty ratio to enhance learning.', 
-        'Yes, Kepler provides financial aid for students.', 
-        'Kepler’s core values are excellence, integrity, and innovation.', 
-        'Kepler supports students through personal coaching, workshops, and mentoring.', 
-        'Students have access to tutoring, online resources, and faculty support.', 
-        'Yes, Kepler College has a career center that connects students to job opportunities.', 
-        'Technology is integrated into all aspects of learning at Kepler.', 
-        'Kepler offers a range of housing options for students on campus.', 
-        'Yes, Kepler has partnerships with other universities for exchange programs.', 
-        'Kepler ensures credit transfer processes align with academic policies.', 
-        'Kepler is committed to sustainability through community-based projects.', 
-        'Kepler equips students with the skills needed for the global workforce.', 
-        'Kepler offers postgraduate programs in collaboration with SNHU.', 
-        'Students can join clubs and participate in extracurricular activities at Kepler.', 
-        'Kepler fosters innovation by encouraging creative solutions to real-world problems.', 
-        'Kepler addresses student challenges by providing counseling, mentoring, and academic support.', 
-        'Kepler plays a pivotal role in Rwanda’s education sector.', 
-        'Kepler students participate in internships across industries.', 
-        'Kepler stays updated with job market trends to design relevant programs.', 
-        'Kepler College offers its alumni lifelong learning and engagement opportunities.', 
-        'Students at Kepler are involved in research projects with faculty guidance.', 
-        'Kepler campuses include Kigali and its online education platforms.'
+        'Yes, Kepler provides financial aid for qualifying students.',
+        'Kepler College values integrity, collaboration, and excellence in education.', 
+        'Kepler College supports personal development through workshops and mentoring.', 
+        'Academic support includes tutoring, workshops, and personalized coaching.', 
+        'Yes, there is a career center offering job placement and internship assistance.', 
+        'Kepler College uses technology in classrooms and online platforms to facilitate learning.', 
+        'Students typically live in campus housing or nearby apartments.', 
+        'Yes, Kepler has partnerships with various universities and organizations.', 
+        'Transferring credits is possible; please consult the admissions office for details.', 
+        'Kepler College promotes sustainability through eco-friendly practices and community engagement.', 
+        'Kepler College prepares students for the global job market with international partnerships and training.', 
+        'Yes, Kepler offers postgraduate programs in business and education.', 
+        'Students can participate in clubs, sports, and leadership opportunities.', 
+        'Kepler College fosters innovation through creative projects and entrepreneurship programs.', 
+        'Challenges include adapting to the learning model and time management; the college offers support for these.', 
+        'Kepler contributes to the education landscape by offering relevant, quality programs.', 
+        'Kepler provides internships through partnerships with businesses and organizations.', 
+        'Kepler continuously updates its programs based on market research and industry feedback.', 
+        'Kepler College facilitates connections between students and alumni through networking events.', 
+        'Research opportunities are available in collaboration with faculty and industry partners.', 
+        'Kepler has campuses in Kiziba and Kigali.'
     ]
 }
 
-# Convert the dictionary to a DataFrame
-bot_df = pd.DataFrame(bot_data)
+# Create a DataFrame from the bot data
+df = pd.DataFrame(bot_data)
 
-# TF-IDF Vectorization
-vectorizer = TfidfVectorizer()
-tfidf_matrix = vectorizer.fit_transform(bot_df['User_Input'])
+# Function to get a response from the chatbot
+def get_bot_response(user_input):
+    user_input = user_input.lower()
+    # Create TF-IDF Vectorizer
+    vectorizer = TfidfVectorizer().fit_transform(df['User_Input'])
+    vectors = vectorizer.toarray()
+    user_vector = vectorizer.transform([user_input]).toarray()
+    cosine_similarities = cosine_similarity(user_vector, vectors)
+    index = cosine_similarities.argsort()[0][-1]  # Get the index of the highest cosine similarity
+    return df['Bot_Response'][index]
 
-# Function to generate a response
-def get_response(user_input):
-    # Transform the user input using the same vectorizer
-    user_input_tfidf = vectorizer.transform([user_input])
-    # Compute cosine similarities between user input and predefined questions
-    similarities = cosine_similarity(user_input_tfidf, tfidf_matrix)
-    # Get the index of the most similar question
-    most_similar_index = similarities.argmax()
-    # Return the corresponding response
-    return bot_df['Bot_Response'].iloc[most_similar_index]
+# User input box
+user_input = st.text_input("You: ")
 
-# User input from Streamlit text input
-user_input = st.text_input("Ask a question:")
-
+# Display the chatbot response
 if user_input:
-    # Get the chatbot's response
-    response = get_response(user_input)
-    # Display the response
-    st.write(response)
+    response = get_bot_response(user_input)
+    st.text(f"Bot: {response}")
