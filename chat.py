@@ -7,10 +7,12 @@ from sklearn.metrics.pairwise import cosine_similarity
 st.title("Kepler College Chatbot")
 
 # Load or define the bot data (replace this with your actual dataset)
-bot_data = pd.DataFrame({
+# Ensure both lists are of the same length
+bot_data = {
     'User_Input': [
-        'hello', 'how are you', 'bye', 'thanks', 'How do I apply for admission?',
-        'What are the admission requirements?', 'Is financial aid available?', 'What is the campus like?',
+        'hello', 'how are you', 'bye', 'thanks',
+        'How do I apply for admission?', 'What are the admission requirements?',
+        'Is financial aid available?', 'What is the campus like?',
         'Can I transfer credits from another institution?', 'What is the deadline for applications?',
         'Are there any scholarships available?', 'How can I contact the admissions office?',
         'What support services are available for students?', 'What programs does Kepler College offer?',
@@ -37,17 +39,19 @@ bot_data = pd.DataFrame({
         'What career paths do Kepler College graduates typically pursue?', 'How does Kepler College measure student performance?',
         'What is Kepler College\'s approach to leadership development?', 'How does Kepler College integrate social impact into its education?',
         'Does Kepler College have an online learning option?', 'What extracurricular activities are available to students at Kepler College?',
-        'Tell me about Kepler College', 'How many intakes?', 'intake open', 'support phone number, admission number, registration number',
-        'What is the student-to-faculty ratio at Kepler?', 'Does Kepler provide scholarships or financial aid?', 'What are Kepler’s core values?',
-        'How does Kepler support students\' personal development?', 'What kind of academic support is available for students struggling with their studies?',
-        'Is there a career center at Kepler?', 'How does Kepler integrate technology in the learning process?', 'What are the living arrangements for students at Kepler?',
-        'Are there any partnerships between Kepler and other universities?', 'What is the process for transferring credits to Kepler from another institution?',
+        'Tell me about Kepler College', 'How many intakes are there?', 'When is the January intake?',
+        'What is the student-to-faculty ratio at Kepler?', 'Does Kepler provide scholarships or financial aid?', 
+        'What are Kepler’s core values?', 'How does Kepler support students\' personal development?',
+        'What kind of academic support is available for students struggling with their studies?',
+        'Is there a career center at Kepler?', 'How does Kepler integrate technology in the learning process?',
+        'What are the living arrangements for students at Kepler?', 'Are there any partnerships between Kepler and other universities?',
+        'What is the process for transferring credits to Kepler from another institution?',
         'What is Kepler\'s approach to sustainability and community engagement?', 'How does Kepler prepare students for the global job market?',
-        'Does Kepler offer postgraduate programs?', 'What extracurricular opportunities are available at Kepler?', 
+        'Does Kepler offer postgraduate programs?', 'What extracurricular opportunities are available at Kepler?',
         'How does Kepler foster innovation among its students?', 'What are the key challenges Kepler students face, and how does the college address them?',
         'How does Kepler contribute to the education landscape in Rwanda?', 'What kind of internships are available to Kepler students?',
         'How does Kepler ensure its programs stay relevant to the job market?', 'How do Kepler students stay connected with alumni?',
-        'What kind of research opportunities are available at Kepler?', 'campuses'
+        'What kind of research opportunities are available at Kepler?', 'What campuses does Kepler have?'
     ],
     'Bot_Response': [
         'Hi there!', 'I am good, how about you?', 'Goodbye!', 'You are welcome!',
@@ -104,11 +108,11 @@ bot_data = pd.DataFrame({
         'Kepler College integrates leadership training into its curriculum.', 
         'Kepler College emphasizes social impact through community service projects.', 
         'Yes, Kepler College offers a blended learning model.', 
-        'Kepler College offers a range of extracurricular activities.', 
-        'Kepler is a higher learning institution in Rwanda.', 
-        'There are three intakes: September, January, and March.', 
-        'The January intake starts from 16th September to 5th March 2024.', 
-        'Kepler maintains a low student-to-faculty ratio.', 
+        'Students can engage in various clubs, sports, and cultural activities.', 
+        'Kepler College is an innovative institution focused on practical learning.', 
+        'There are two main intakes in January and September each year.', 
+        'The January intake begins classes in mid-January.', 
+        'Kepler maintains a favorable student-to-faculty ratio to enhance learning.', 
         'Yes, Kepler provides financial aid for students.', 
         'Kepler’s core values are excellence, integrity, and innovation.', 
         'Kepler supports students through personal coaching, workshops, and mentoring.', 
@@ -131,11 +135,14 @@ bot_data = pd.DataFrame({
         'Students at Kepler are involved in research projects with faculty guidance.', 
         'Kepler campuses include Kigali and its online education platforms.'
     ]
-})
+}
+
+# Convert the dictionary to a DataFrame
+bot_df = pd.DataFrame(bot_data)
 
 # TF-IDF Vectorization
 vectorizer = TfidfVectorizer()
-tfidf_matrix = vectorizer.fit_transform(bot_data['User_Input'])
+tfidf_matrix = vectorizer.fit_transform(bot_df['User_Input'])
 
 # Function to generate a response
 def get_response(user_input):
@@ -146,7 +153,7 @@ def get_response(user_input):
     # Get the index of the most similar question
     most_similar_index = similarities.argmax()
     # Return the corresponding response
-    return bot_data['Bot_Response'].iloc[most_similar_index]
+    return bot_df['Bot_Response'].iloc[most_similar_index]
 
 # User input from Streamlit text input
 user_input = st.text_input("Ask a question:")
