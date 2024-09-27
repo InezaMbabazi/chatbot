@@ -111,8 +111,8 @@ bot_data = {
         'Kepler College is an innovative institution focused on practical learning.', 
         'There are two main intakes in January and September each year.', 
         'The January intake begins classes in mid-January.', 
-        'Kepler maintains a favorable student-to-faculty ratio to enhance learning.', 
-        'Yes, Kepler provides financial aid for qualifying students.',
+        'Kepler College maintains a 15:1 student-to-faculty ratio.', 
+        'Yes, scholarships and financial aid are available for eligible students.', 
         'Kepler College values integrity, collaboration, and excellence in education.', 
         'Kepler College supports personal development through workshops and mentoring.', 
         'Academic support includes tutoring, workshops, and personalized coaching.', 
@@ -139,13 +139,18 @@ bot_data = {
 # Create a DataFrame from the bot data
 df = pd.DataFrame(bot_data)
 
+# Initialize the vectorizer and fit it once
+vectorizer = TfidfVectorizer().fit(df['User_Input'])
+
 # Function to get a response from the chatbot
 def get_bot_response(user_input):
     user_input = user_input.lower()
-    # Create TF-IDF Vectorizer
-    vectorizer = TfidfVectorizer().fit_transform(df['User_Input'])
-    vectors = vectorizer.toarray()
+    # Check if the user input is empty
+    if not user_input:
+        return "Please enter a question or message."
+    
     user_vector = vectorizer.transform([user_input]).toarray()
+    vectors = vectorizer.transform(df['User_Input']).toarray()
     cosine_similarities = cosine_similarity(user_vector, vectors)
     index = cosine_similarities.argsort()[0][-1]  # Get the index of the highest cosine similarity
     return df['Bot_Response'][index]
