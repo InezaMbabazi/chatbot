@@ -6,8 +6,12 @@ from sklearn.metrics.pairwise import cosine_similarity
 # Load or define your bot data (replace this with your actual dataset)
 # Make sure you have a CSV file with 'User_Input' and 'Bot_Response' columns
 bot_data = pd.DataFrame({
-    'User_Input': ['hello', 'how are you', 'bye', 'thanks'],
-    'Bot_Response': ['Hi there!', 'I am good, how about you?', 'Goodbye!', 'You are welcome!']
+    'User_Input': ['hello', 'how are you', 'bye', 'thanks','How do I apply for admission?'
+,'What are the admission requirements?'
+],
+    'Bot_Response': ['Hi there!', 'I am good, how about you?', 'Goodbye!', 'You are welcome!','To apply for admission, visit our website and fill out the online application form.','Admission requirements include a high school diploma and proof of English proficiency.'
+
+]
 })
 
 # Vectorizing the user inputs
