@@ -53,7 +53,7 @@ bot_data = {
         'What kind of research opportunities are available at Kepler?', 'What campuses does Kepler have?'
     ],
     'Bot_Response': [
-       Hi there!', 'I am good, how about you?', 'Goodbye!', 'You are welcome!',
+       'Hi there!', 'I am good, how about you?', 'Goodbye!', 'You are welcome!',
         'To apply for admission, visit our website and fill out the online application form.', 
         'Admission requirements include a high school diploma and proof of English proficiency.', 
         'Yes, financial aid is available for eligible students through various programs.', 
