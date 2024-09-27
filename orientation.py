@@ -1,11 +1,4 @@
 import streamlit as st
-import spacy
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import linear_kernel
-import numpy as np
-
-# Load the spaCy English model
-nlp = spacy.load("en_core_web_sm")
 
 # Title of the chatbot app
 st.title("Kepler College Project Management Chatbot")
@@ -45,34 +38,23 @@ knowledge_base = {
     "academic integrity": (
         "Plagiarism and academic dishonesty are not tolerated and may result in disciplinary measures."
     ),
+    # Add more intents and responses as needed
 }
-
-# Prepare the knowledge base for NLP processing
-questions = list(knowledge_base.keys())
-answers = list(knowledge_base.values())
-
-# Vectorize the questions using TF-IDF
-vectorizer = TfidfVectorizer()
-tfidf_matrix = vectorizer.fit_transform(questions)
 
 # User input from Streamlit text input
 user_input = st.text_input("Ask a question about the Project Management program:")
 
 if user_input:
-    # Preprocess user input
-    user_input_vector = vectorizer.transform([user_input])
+    # Convert user input to lower case for matching
+    user_input = user_input.lower()
+    response_found = False
 
-    # Calculate similarity scores between user input and knowledge base
-    cosine_similarities = linear_kernel(user_input_vector, tfidf_matrix).flatten()
+    # Check for matching intent in the knowledge base
+    for key in knowledge_base:
+        if key in user_input:
+            st.write(knowledge_base[key])
+            response_found = True
+            break
 
-    # Find the index of the best matching question
-    best_match_index = np.argmax(cosine_similarities)
-    best_match_score = cosine_similarities[best_match_index]
-
-    # Set a threshold for response
-    threshold = 0.1  # You can adjust this value
-
-    if best_match_score > threshold:
-        st.write(answers[best_match_index])
-    else:
+    if not response_found:
         st.write("I'm sorry, I couldn't find an answer to your question. Please ask something else.")
