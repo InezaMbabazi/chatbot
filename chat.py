@@ -53,7 +53,7 @@ bot_data = {
         'What kind of research opportunities are available at Kepler?', 'What campuses does Kepler have?'
     ],
     'Bot_Response': [
-      'Hi there!', 'I am good, how about you?', 'Goodbye!', 'You are welcome!',
+       Hi there!', 'I am good, how about you?', 'Goodbye!', 'You are welcome!',
         'To apply for admission, visit our website and fill out the online application form.', 
         'Admission requirements include a high school diploma and proof of English proficiency.', 
         'Yes, financial aid is available for eligible students through various programs.', 
@@ -142,10 +142,6 @@ bot_df = pd.DataFrame(bot_data)
 vectorizer = TfidfVectorizer()
 tfidf_matrix = vectorizer.fit_transform(bot_df['User_Input'])
 
-# Initialize chat history in session state
-if 'chat_history' not in st.session_state:
-    st.session_state.chat_history = []
-
 # Function to generate a response
 def get_response(user_input):
     user_input_tfidf = vectorizer.transform([user_input])
@@ -154,17 +150,17 @@ def get_response(user_input):
     return bot_df['Bot_Response'].iloc[most_similar_index]
 
 # User input from Streamlit text input
-user_input = st.text_input("Ask a question:", key="user_input")
+user_input = st.text_input("Ask a question:")
 
-if st.button("Send"):
-    if user_input:  # Ensure input is not empty
-        response = get_response(user_input)
-        st.session_state.chat_history.append(f"You: {user_input}")
-        st.session_state.chat_history.append(f"Bot: {response}")
-
-        # Clear the input field after sending the message
-        st.session_state.user_input = ""  # Reset the input field to empty
+if user_input:
+    response = get_response(user_input)
+    st.write("**Bot:**", response)
+    st.session_state.chat_history.append(f"You: {user_input}")
+    st.session_state.chat_history.append(f"Bot: {response}")
 
 # Display chat history
-for chat in st.session_state.chat_history:
-    st.write(chat)
+if 'chat_history' in st.session_state:
+    for chat in st.session_state.chat_history:
+        st.write(chat)
+else:
+    st.session_state.chat_history = []
