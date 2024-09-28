@@ -4,7 +4,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import make_pipeline
 
-# Updated data with messages and ensure all arrays have the same length
+# Data with messages, sender, and receiver
 data = {
     'Message': [
         "Messages and calls are end-to-end encrypted. No one outside of this chat, not even WhatsApp, can read or listen to them.",
@@ -99,8 +99,14 @@ data = {
         'K Aline'] * 68  # All messages received by K Aline
 }
 
-# Ensuring all lists have the same length
-assert len(data['Message']) == len(data['Sender']) == len(data['Receiver'])
+# Print lengths of each list to identify mismatch
+print(f"Length of Messages: {len(data['Message'])}")
+print(f"Length of Senders: {len(data['Sender'])}")
+print(f"Length of Receivers: {len(data['Receiver'])}")
+
+# Check that lengths are consistent
+if len(data['Message']) != len(data['Sender']) or len(data['Sender']) != len(data['Receiver']):
+    raise ValueError("Length mismatch between Message, Sender, and Receiver.")
 
 # Creating the DataFrame
 df = pd.DataFrame(data)
