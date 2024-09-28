@@ -4,7 +4,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import make_pipeline
 
-# Data preparation with 30 equal-length messages
+# Updated data with messages and ensure all arrays have the same length
 data = {
     'Message': [
         "Messages and calls are end-to-end encrypted. No one outside of this chat, not even WhatsApp, can read or listen to them.",
@@ -36,11 +36,71 @@ data = {
         "Give me few.",
         "Is 7 days?",
         "Can we boost this on social networks with only 200$?",
-        "Good morning, kindly give me 30 minutes."
+        "Good morning, kindly give me 30 minutes.",
+        "Arko I told him something he will remember for sometime.",
+        "I knew.",
+        "Let's go discuss it in the back (Kinyarwanda).",
+        "You deleted this message.",
+        "Untitled (3).png (document omitted)",
+        "Well, you are doing great work.",
+        "It's good to hear how decisions are being made.",
+        "Let's say a student is in year 1, attends classes, gets marks, and pays fees. If they pass, they get promoted to year 2. What happens if they fail?",
+        "I'm just asking.",
+        "Sure… I should show that on the diagram.",
+        "That's what I was thinking (Kinyarwanda).",
+        "Keep talking (Kinyarwanda).",
+        "I focused only on how data should flow but if a student doesn't complete the required credits, they have to repeat the year.",
+        "Don't I understand? Let me ask, graduation isn't the data flow of the 3rd year? If all the conditions are fulfilled, someone should graduate, right? Unless there's more information you're getting from the database.",
+        "You got me (Kinyarwanda).",
+        "I don't know, I'm just trying to understand your data flow diagram ‍♀️.",
+        "Yes.",
+        "How do I look with my makeup (link to Instagram reel).",
+        "(link to another Instagram reel).",
+        "You look like an angry bird to me.",
+        "Have a good day.",
+        "Have a better one too.",
+        "Hi.",
+        "Umeze neza Kabatesi (How are you, Kabatesi?).",
+        "Juss to check on uu (Just to check on you).",
+        "I am so busy.",
+        "But fine.",
+        "Leaving the office shortly.",
+        "Oooh! Sorry.",
+        "Okae.",
+        "(link to Instagram reel).",
+        "Can we do this ?!!",
+        "So confident…😁😁😁, by the way how did he know?? 🤔",
+        "Aww… very touching.",
+        "Night night.",
+        "‎This message was deleted.",
+        "Article & Message.docx ‎document omitted.",
+        "Yeap.",
+        "Man uziko dutekereza kimwe 😅 uziko nari narakoze article ijya kumpera nkiyi uzashyireho tube 2 and we will be telling our kids how twarabahaga turi 2 😅😅😅😅 anyway This article is great rwose, but the magazine will be a better tool to market EAUR sibyo. I think you should not focus about higher learning in general, instead focus on MIS at EAUR. Higher learning in general can be addressed in the introduction…. You should concentrate more on how MIS at EAUR has changed the way of learning by analyzing student data in real time and how we are going to integrate it with AI…..",
+        "We have some good points you can emphasize on like… automatic attendance, marks analysis, payment analysis and progress analysis….",
+        "Niko mbitekereza.",
+        "Sibyo !!?"
     ],
-    'Sender': ['M Prince'] * 30,  # Ensure all 30 messages are from M Prince
-    'Receiver': ['K Aline'] * 30  # Ensure all 30 messages are to K Aline
+    'Sender': [
+        'M Prince', 'K Aline ☺️', 'M Prince', 'M Prince', 'M Prince',
+        'K Aline ☺️', 'K Aline ☺️', 'K Aline ☺️', 'K Aline ☺️', 'M Prince',
+        'M Prince', 'M Prince', 'M Prince', 'M Prince', 'M Prince',
+        'M Prince', 'M Prince', 'M Prince', 'M Prince', 'M Prince',
+        'M Prince', 'K Aline ☺️', 'K Aline ☺️', 'K Aline ☺️', 'K Aline ☺️',
+        'M Prince', 'K Aline ☺️', 'M Prince', 'M Prince', 'K Aline ☺️',
+        'K Aline ☺️', 'K Aline ☺️', 'K Aline ☺️', 'M Prince', 'M Prince',
+        'K Aline ☺️', 'K Aline ☺️', 'M Prince', 'M Prince', 'M Prince',
+        'M Prince', 'K Aline ☺️', 'K Aline ☺️', 'K Aline ☺️', 'K Aline ☺️',
+        'M Prince', 'M Prince', 'M Prince', 'M Prince', 'M Prince',
+        'M Prince', 'M Prince', 'K Aline ☺️', 'K Aline ☺️', 'M Prince',
+        'M Prince', 'K Aline ☺️', 'K Aline ☺️', 'K Aline ☺️', 'M Prince',
+        'M Prince'
+    ],
+    'Receiver': [
+        'K Aline'] * 68  # All messages received by K Aline
 }
+
+# Ensuring all lists have the same length
+assert len(data['Message']) == len(data['Sender']) == len(data['Receiver'])
 
 # Creating the DataFrame
 df = pd.DataFrame(data)
