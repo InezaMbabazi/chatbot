@@ -146,22 +146,19 @@ data = {
         "M Prince", "K Aline ☺️", "M Prince", "K Aline ☺️", "K Aline ☺️", "M Prince", "M Prince"
     ],
     'Receiver': [
-        "M Prince", "K Aline ☺️", "M Prince", "K Aline ☺️", "M Prince", "K Aline ☺️", "K Aline ☺️", "M Prince", "K Aline ☺️", 
-        "K Aline ☺️", "K Aline ☺️", "M Prince", "M Prince", "M Prince", "K Aline ☺️", "K Aline ☺️", "K Aline ☺️", "M Prince", 
-        "M Prince", "K Aline ☺️", "M Prince", "K Aline ☺️", "M Prince", "M Prince", "K Aline ☺️", "K Aline ☺️", "M Prince", 
-        "M Prince", "K Aline ☺️", "M Prince", "K Aline ☺️", "K Aline ☺️", "K Aline ☺️", "M Prince", "K Aline ☺️", 
-        "M Prince", "K Aline ☺️", "K Aline ☺️", "M Prince", "M Prince", "K Aline ☺️", "M Prince", "K Aline ☺️", 
-        "M Prince", "K Aline ☺️", "K Aline ☺️", "M Prince", "M Prince", "K Aline ☺️", "M Prince", "K Aline ☺️", 
+        "M Prince", "K Aline ☺️", "M Prince", "K Aline ☺️", "M Prince", "K Aline ☺️", "K Aline ☺️", "M Prince", "M Prince",
+        "K Aline ☺️", "M Prince", "K Aline ☺️", "M Prince", "K Aline ☺️", "K Aline ☺️", "M Prince", "K Aline ☺️", "M Prince", 
+        "K Aline ☺️", "M Prince", "K Aline ☺️", "K Aline ☺️", "K Aline ☺️", "K Aline ☺️", "M Prince", "K Aline ☺️", 
         "M Prince", "K Aline ☺️", "K Aline ☺️", "K Aline ☺️", "M Prince", "M Prince", "M Prince", "K Aline ☺️", 
-        "K Aline ☺️", "K Aline ☺️", "M Prince", "M Prince", "M Prince", "K Aline ☺️", "K Aline ☺️", "M Prince", 
+        "K Aline ☺️", "M Prince", "K Aline ☺️", "M Prince", "M Prince", "K Aline ☺️", "K Aline ☺️", "M Prince", 
+        "M Prince", "K Aline ☺️", "K Aline ☺️", "M Prince", "K Aline ☺️", "M Prince", "K Aline ☺️", "K Aline ☺️", 
         "K Aline ☺️", "M Prince", "M Prince", "K Aline ☺️", "K Aline ☺️", "M Prince", "K Aline ☺️", "M Prince", 
-        "K Aline ☺️", "K Aline ☺️", "M Prince", "K Aline ☺️", "M Prince", "K Aline ☺️", "M Prince", "M Prince", 
-        "K Aline ☺️", "M Prince", "K Aline ☺️", "K Aline ☺️", "M Prince", "K Aline ☺️", "M Prince", "K Aline ☺️", 
-        "K Aline ☺️", "M Prince", "M Prince", "K Aline ☺️", "K Aline ☺️", "M Prince", "K Aline ☺️", "M Prince"
+        "K Aline ☺️", "K Aline ☺️", "K Aline ☺️", "M Prince", "M Prince", "M Prince", "K Aline ☺️", "K Aline ☺️", 
+        "M Prince", "K Aline ☺️", "K Aline ☺️", "K Aline ☺️", "M Prince", "K Aline ☺️", "M Prince"
     ]
 }
 
-# To make sure all arrays are the same length
+# To ensure all arrays are the same length
 max_length = max(len(data['Message']), len(data['Sender']), len(data['Receiver']))
 
 # Extend Sender and Receiver lists if they are shorter than the longest list
@@ -175,14 +172,15 @@ chat_data = pd.DataFrame(data)
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Function to get a response based on the user's input
+# Function to get a response based on M Prince's input and return K Aline's replies
 def get_chatbot_response(user_message):
-    # Simple AI response logic
-    possible_responses = chat_data[chat_data['Message'].str.contains(user_message, case=False, na=False)]
+    # Simple AI response logic, looking for responses from K Aline
+    possible_responses = chat_data[(chat_data['Message'].str.contains(user_message, case=False, na=False)) & 
+                                    (chat_data['Sender'] == "K Aline ☺️")]
     
     # If there are matching responses in the dataset
     if not possible_responses.empty:
-        # Randomly select a sender's response
+        # Randomly select a K Aline's response
         response_row = possible_responses.sample(n=1).iloc[0]
         return f"{response_row['Sender']}: {response_row['Message']}"
     
@@ -201,11 +199,11 @@ if st.button("Send"):
         # Add user message to the chat
         st.session_state.messages.append({"sender": "You", "message": user_input})
         
-        # Get AI response
+        # Get AI response as K Aline
         ai_response = get_chatbot_response(user_input)
         
         # Add AI response to the chat
-        st.session_state.messages.append({"sender": "Chatbot", "message": ai_response})
+        st.session_state.messages.append({"sender": "K Aline ☺️", "message": ai_response})
 
 # Display messages
 for msg in st.session_state.messages:
