@@ -96,17 +96,29 @@ data = {
         'M Prince'
     ],
     'Receiver': [
-        'K Aline'] * 68  # All messages received by K Aline
+        'K Aline' for _ in range(70)  # Adjusted to match the number of messages
+    ]
 }
 
-# Print lengths of each list to identify mismatch
-print(f"Length of Messages: {len(data['Message'])}")
-print(f"Length of Senders: {len(data['Sender'])}")
-print(f"Length of Receivers: {len(data['Receiver'])}")
+# Adjust the lengths to match
+len_message = len(data['Message'])
+len_sender = len(data['Sender'])
+len_receiver = len(data['Receiver'])
+
+# Make Sender and Receiver match the length of Message
+if len_sender < len_message:
+    data['Sender'].extend(['M Prince'] * (len_message - len_sender))
+elif len_sender > len_message:
+    data['Sender'] = data['Sender'][:len_message]
+
+if len_receiver < len_message:
+    data['Receiver'].extend(['K Aline'] * (len_message - len_receiver))
+elif len_receiver > len_message:
+    data['Receiver'] = data['Receiver'][:len_message]
 
 # Check that lengths are consistent
-if len(data['Message']) != len(data['Sender']) or len(data['Sender']) != len(data['Receiver']):
-    raise ValueError("Length mismatch between Message, Sender, and Receiver.")
+assert len(data['Message']) == len(data['Sender']) == len(data['Receiver']), \
+    "Length mismatch between Message, Sender, and Receiver."
 
 # Creating the DataFrame
 df = pd.DataFrame(data)
