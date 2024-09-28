@@ -1,4 +1,4 @@
-import streamlit as st
+import streamlit as st 
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -9,15 +9,16 @@ st.title("Kepler College Chatbot")
 # Load or define the bot data
 bot_data = {
     'User_Input': [
-        'hello', 'how are you', 'bye', 'thanks',
+       'hello', 'how are you', 'bye', 'thanks',
         'How do I apply for admission?', 'What are the admission requirements?',
         'Is financial aid available?', 'What is the campus like?',
         'Can I transfer credits from another institution?', 'What is the deadline for applications?',
         'Are there any scholarships available?', 'How can I contact the admissions office?',
         'What support services are available for students?', 'What programs does Kepler College offer?',
         'Is the education at Kepler College recognized internationally?', 'What is Kepler College’s teaching approach?',
-        'How competitive is admission to Kepler College?', 'Does Kepler College offer scholarships?',
-        'What is life like on Kepler College\'s campus?', 'Does Kepler College offer housing to students?',
+        'How competitive is admission to Kepler College?', 'What are the admission requirements?',
+        'Does Kepler College offer scholarships?', 'What is life like on Kepler College\'s campus?',
+        'Does Kepler College offer housing to students?', 'What support services are available for students?',
         'What are Kepler College graduates\' job prospects?', 'Does Kepler College offer internships or practical training?',
         'How does Kepler College prepare students for the job market?', 'How affordable is it to study at Kepler College?',
         'Are there flexible payment plans for tuition?', 'How do scholarships and financial aid work at Kepler College?',
@@ -52,7 +53,7 @@ bot_data = {
         'What kind of research opportunities are available at Kepler?', 'What campuses does Kepler have?'
     ],
     'Bot_Response': [
-        'Hi there!', 'I am good, how about you?', 'Goodbye!', 'You are welcome!',
+       'Hi there!', 'I am good, how about you?', 'Goodbye!', 'You are welcome!',
         'To apply for admission, visit our website and fill out the online application form.', 
         'Admission requirements include a high school diploma and proof of English proficiency.', 
         'Yes, financial aid is available for eligible students through various programs.', 
@@ -112,64 +113,54 @@ bot_data = {
         'The January intake begins classes in mid-January.', 
         'Kepler College maintains a 15:1 student-to-faculty ratio.', 
         'Yes, scholarships and financial aid are available for eligible students.', 
-        'Kepler College values integrity, excellence, and inclusivity.', 
-        'Kepler College supports personal development through workshops and mentorship.', 
-        'We offer tutoring, workshops, and one-on-one support for struggling students.', 
-        'Yes, there is a dedicated career center that assists students with job placements.', 
-        'Kepler College utilizes technology like online resources and digital tools for learning.', 
-        'Students typically live in shared accommodation or dormitories.', 
-        'Kepler College has partnerships with various institutions for research and collaboration.', 
-        'Transferring credits involves a review process to ensure they meet our program requirements.', 
-        'Kepler College promotes sustainability through green initiatives and community engagement.', 
-        'Kepler College prepares students for global careers through international partnerships.', 
-        'Yes, Kepler College offers postgraduate programs in select fields.', 
-        'Kepler offers various clubs, sports teams, and arts programs.', 
-        'Kepler fosters innovation through project-based learning and entrepreneurial support.', 
-        'Kepler students face challenges such as time management and study pressure; we provide support to help them succeed.', 
-        'Kepler contributes to Rwanda’s educational landscape by providing quality, accessible education.', 
-        'Internships are available across multiple sectors, including healthcare, education, and business.', 
-        'Kepler regularly updates its curriculum to meet industry needs.', 
-        'Kepler maintains a strong alumni network for career support and mentoring.', 
-        'Research opportunities are available for students and faculty in various fields.', 
-        'Kepler College has campuses in Kiziba and Kigali.'
+        'Kepler College values integrity, collaboration, and excellence in education.', 
+        'Kepler College supports personal development through workshops and mentoring.', 
+        'Academic support includes tutoring, workshops, and personalized coaching.', 
+        'Yes, there is a career center offering job placement and internship assistance.', 
+        'Kepler College uses technology in classrooms and online platforms to facilitate learning.', 
+        'Students typically live in campus housing or nearby apartments.', 
+        'Yes, Kepler has partnerships with various universities and organizations.', 
+        'Transferring credits is possible; please consult the admissions office for details.', 
+        'Kepler College promotes sustainability through eco-friendly practices and community engagement.', 
+        'Kepler College prepares students for the global job market with international partnerships and training.', 
+        'Yes, Kepler offers postgraduate programs in business and education.', 
+        'Students can participate in clubs, sports, and leadership opportunities.', 
+        'Kepler College fosters innovation through creative projects and entrepreneurship programs.', 
+        'Challenges include adapting to the learning model and time management; the college offers support for these.', 
+        'Kepler contributes to the education landscape by offering relevant, quality programs.', 
+        'Kepler provides internships through partnerships with businesses and organizations.', 
+        'Kepler continuously updates its programs based on market research and industry feedback.', 
+        'Kepler College facilitates connections between students and alumni through networking events.', 
+        'Research opportunities are available in collaboration with faculty and industry partners.', 
+        'Kepler has campuses in Kiziba and Kigali.'
     ]
 }
 
-# Convert bot data to DataFrame
 bot_df = pd.DataFrame(bot_data)
 
-# Use TF-IDF to vectorize user input
+# TF-IDF Vectorization
 vectorizer = TfidfVectorizer()
-bot_matrix = vectorizer.fit_transform(bot_df['User_Input'])
+tfidf_matrix = vectorizer.fit_transform(bot_df['User_Input'])
 
-# Initialize chat history
-if 'chat_history' not in st.session_state:
-    st.session_state.chat_history = []
+# Function to generate a response
+def get_response(user_input):
+    user_input_tfidf = vectorizer.transform([user_input])
+    similarities = cosine_similarity(user_input_tfidf, tfidf_matrix)
+    most_similar_index = similarities.argmax()
+    return bot_df['Bot_Response'].iloc[most_similar_index]
 
-# User input
-user_input = st.text_input("You: ", "")
+# User input from Streamlit text input
+user_input = st.text_input("Ask a question:")
 
-# Submit button
-if st.button("Send"):
-    if user_input:
-        # Store user input in chat history
-        st.session_state.chat_history.append(("You", user_input))
-        
-        # Vectorize user input and find the closest bot response
-        user_vector = vectorizer.transform([user_input])
-        cosine_similarities = cosine_similarity(user_vector, bot_matrix).flatten()
-        response_index = cosine_similarities.argmax()
-        bot_response = bot_df['Bot_Response'].iloc[response_index]
-        
-        # Store bot response in chat history
-        st.session_state.chat_history.append(("Bot", bot_response))
-
-        # Clear the input box after sending
-        st.experimental_rerun()
+if user_input:
+    response = get_response(user_input)
+    st.write("**Bot:**", response)
+    st.session_state.chat_history.append(f"You: {user_input}")
+    st.session_state.chat_history.append(f"Bot: {response}")
 
 # Display chat history
-for speaker, message in st.session_state.chat_history:
-    st.write(f"**{speaker}:** {message}")
-
-# Optional: Add a footer or additional information
-st.write("For more information, visit our [website](#).")
+if 'chat_history' in st.session_state:
+    for chat in st.session_state.chat_history:
+        st.write(chat)
+else:
+    st.session_state.chat_history = []
