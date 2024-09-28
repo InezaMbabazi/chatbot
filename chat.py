@@ -101,25 +101,15 @@ data = {
 
 # Remove the message that says "‎This message was deleted."
 remove_message = "‎This message was deleted."
-data['Message'] = [msg for msg in data['Message'] if msg != remove_message]
-data['Sender'] = [data['Sender'][i] for i in range(len(data['Message'])) if data['Sender'][i] != 'K Aline ☺️' and data['Message'][i] != remove_message]
-data['Receiver'] = ['K Aline' for _ in range(len(data['Message']))]  # Adjust Receiver to match the remaining messages
+filtered_data = [(msg, sender) for msg, sender in zip(data['Message'], data['Sender']) if msg != remove_message]
 
-# Adjust the lengths to match
-len_message = len(data['Message'])
-len_sender = len(data['Sender'])
-len_receiver = len(data['Receiver'])
+# Unzip the filtered data
+filtered_messages, filtered_senders = zip(*filtered_data)
 
-# Make Sender and Receiver match the length of Message
-if len_sender < len_message:
-    data['Sender'].extend(['M Prince'] * (len_message - len_sender))
-elif len_sender > len_message:
-    data['Sender'] = data['Sender'][:len_message]
-
-if len_receiver < len_message:
-    data['Receiver'].extend(['K Aline'] * (len_message - len_receiver))
-elif len_receiver > len_message:
-    data['Receiver'] = data['Receiver'][:len_message]
+# Update data
+data['Message'] = list(filtered_messages)
+data['Sender'] = list(filtered_senders)
+data['Receiver'] = ['K Aline' for _ in range(len(data['Message']))]  # Update Receiver based on the remaining messages
 
 # Check that lengths are consistent
 assert len(data['Message']) == len(data['Sender']) == len(data['Receiver']), \
