@@ -72,7 +72,6 @@ data = {
         "So confident…😁😁😁, by the way how did he know?? 🤔",
         "Aww… very touching.",
         "Night night.",
-        "‎This message was deleted.",
         "Article & Message.docx ‎document omitted.",
         "Yeap.",
         "Man uziko dutekereza kimwe 😅 uziko nari narakoze article ijya kumpera nkiyi uzashyireho tube 2 and we will be telling our kids how twarabahaga turi 2 😅😅😅😅 anyway This article is great rwose, but the magazine will be a better tool to market EAUR sibyo. I think you should not focus about higher learning in general, instead focus on MIS at EAUR. Higher learning in general can be addressed in the introduction…. You should concentrate more on how MIS at EAUR has changed the way of learning by analyzing student data in real time and how we are going to integrate it with AI…..",
@@ -99,6 +98,12 @@ data = {
         'K Aline' for _ in range(70)  # Adjusted to match the number of messages
     ]
 }
+
+# Remove the message that says "‎This message was deleted."
+remove_message = "‎This message was deleted."
+data['Message'] = [msg for msg in data['Message'] if msg != remove_message]
+data['Sender'] = [data['Sender'][i] for i in range(len(data['Message'])) if data['Sender'][i] != 'K Aline ☺️' and data['Message'][i] != remove_message]
+data['Receiver'] = ['K Aline' for _ in range(len(data['Message']))]  # Adjust Receiver to match the remaining messages
 
 # Adjust the lengths to match
 len_message = len(data['Message'])
