@@ -1,134 +1,212 @@
 import streamlit as st
 import pandas as pd
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.pipeline import make_pipeline
+import random
 
-# Data with messages, sender, and receiver
+# Existing dataset ensuring all messages, senders, and receivers are aligned
 data = {
     'Message': [
-        "Messages and calls are end-to-end encrypted. No one outside of this chat, not even WhatsApp, can read or listen to them.",
-        "Good morning campus director!! Hope you’re doing pretty fine! I would like to ask you a favor and a guidance, RTB have requested me to go for curriculum review and they have sent an email to the Vc.",
-        "Request to release Experts in Hospitality and tourism_0001_0001.pdf • ‎4 pages ‎document omitted",
-        "You deleted this message.",
-        "Good morning J.P, I’m doing well, I hope you’re doing good too.",
-        "I think that will work for you.",
-        "I’m doing pretty fine.",
-        "Sure and thank you.",
-        "Hello.",
-        "Yes, JP how are you?",
-        "Pretty fine Director… if possible you help me to get that mission order by Morning…",
-        "Sure, I was actually working since I thought you want it by tomorrow I kept it on hold.",
-        "What’s the District?",
-        "Musanze.",
-        "Ok.",
-        "Confirm the information below: Purpose of the Travel: curriculum review Length of stay: 13 days.",
-        "Purpose of the travel: workshop to develop industry based training trainees manuals.",
-        "Noted, I’ll send it your email tomorrow in the morning.",
-        "And means of transport: ??",
-        "All will be covered by RTB.",
-        "I mean is it public or private??",
-        "Public.",
-        "Good afternoon director umeze neza ?? Nageze imusanze neza We’re also trying to clean our data.",
-        "Good afternoon JP.",
-        "Yego meze neza, glad to arrived safe.",
-        "Purpose: workshop to develop industry based training trainees manuel.",
-        "Give me few.",
-        "Is 7 days?",
-        "Can we boost this on social networks with only 200$?",
-        "Good morning, kindly give me 30 minutes.",
-        "Arko I told him something he will remember for sometime.",
-        "I knew.",
-        "Let's go discuss it in the back (Kinyarwanda).",
-        "You deleted this message.",
+        "Arko I told him something he will remember for sometime",
+        "I knew",
+        "Let's go discuss it in the back (Kinyarwanda)",
         "Untitled (3).png (document omitted)",
         "Well, you are doing great work.",
-        "It's good to hear how decisions are being made.",
+        "It's good to hear how decisions are being made",
         "Let's say a student is in year 1, attends classes, gets marks, and pays fees. If they pass, they get promoted to year 2. What happens if they fail?",
-        "I'm just asking.",
-        "Sure… I should show that on the diagram.",
-        "That's what I was thinking (Kinyarwanda).",
-        "Keep talking (Kinyarwanda).",
+        "I'm just asking",
+        "Sure… I should show that on the diagram",
+        "That's what I was thinking (Kinyarwanda)",
+        "Keep talking (Kinyarwanda)",
         "I focused only on how data should flow but if a student doesn't complete the required credits, they have to repeat the year.",
         "Don't I understand? Let me ask, graduation isn't the data flow of the 3rd year? If all the conditions are fulfilled, someone should graduate, right? Unless there's more information you're getting from the database.",
-        "You got me (Kinyarwanda).",
-        "I don't know, I'm just trying to understand your data flow diagram ‍♀️.",
-        "Yes.",
-        "How do I look with my makeup (link to Instagram reel).",
-        "(link to another Instagram reel).",
-        "You look like an angry bird to me.",
-        "Have a good day.",
-        "Have a better one too.",
-        "Hi.",
-        "Umeze neza Kabatesi (How are you, Kabatesi?).",
-        "Juss to check on uu (Just to check on you).",
-        "I am so busy.",
-        "But fine.",
-        "Leaving the office shortly.",
-        "Oooh! Sorry.",
-        "Okae.",
-        "(link to Instagram reel).",
+        "You got me (Kinyarwanda)",
+        "I don't know, I'm just trying to understand your data flow diagram ‍♀️",
+        "Yes",
+        "How do I look with my makeup (link to Instagram reel)",
+        "(link to another Instagram reel)",
+        ", you look like an angry bird to me",
+        "Have a good day",
+        "Have a better one too",
+        "Hi",
+        "umeze neza Kabatesi (How are you, Kabatesi?)",
+        "Just to check on uu (Just to check on you)",
+        "I am so busy",
+        "but fine",
+        "leaving the office shortly",
+        "oooh! sorry",
+        "okae",
+        "(link to Instagram reel)",
         "Can we do this ?!!",
         "So confident…😁😁😁, by the way how did he know?? 🤔",
-        "Aww… very touching.",
-        "Night night.",
-        "Article & Message.docx ‎document omitted.",
-        "Yeap.",
-        "Man uziko dutekereza kimwe 😅 uziko nari narakoze article ijya kumpera nkiyi uzashyireho tube 2 and we will be telling our kids how twarabahaga turi 2 😅😅😅😅 anyway This article is great rwose, but the magazine will be a better tool to market EAUR sibyo. I think you should not focus about higher learning in general, instead focus on MIS at EAUR. Higher learning in general can be addressed in the introduction…. You should concentrate more on how MIS at EAUR has changed the way of learning by analyzing student data in real time and how we are going to integrate it with AI…..",
-        "We have some good points you can emphasize on like… automatic attendance, marks analysis, payment analysis and progress analysis….",
-        "Niko mbitekereza.",
-        "Sibyo !!?"
+        "Aww… very touching",
+        "Night night",
+        "Yeap",
+        "Man uziko dutekereza kimwe 😅 uziko nari narakoze article ijya kumpera nkiyi uzashyireho tube 2 and we will be telling our kids how twarabahaga turi 2 😅😅😅😅 anyway This article is great rwose, but the magazine will be a better tool to market EAUR sibyo. I think you should not focus about higher learning in general, instead focus on MIS at EAUR. Higher learning in general can be addressed in the introduction…. You should concentrate more on how MIS at EAUR has changed the way of learning by analyzing student data in real time and how we are going to integrate it with AI.",
+        "We have some good points you can emphasize on like… automatic attendance, marks analysis, payment analysis and progress analysis…",
+        "Niko mbitekereza",
+        "Sibyo !!?",
+        "Message of the day, thank you",
+        "Night night babe",
+        "Pleasure",
+        "Night night",
+        "😘",
+        "😘",
+        "Good morning",
+        "Morning",
+        "How wz ur night",
+        "I was okay, managed to sleep",
+        "Glad",
+        "Thanks",
+        "At work already?",
+        "‎image omitted",
+        "Okay",
+        "Urazi??",
+        "Tell me",
+        "Tsanze PD yatagiye nijye winjiyemo nyuma",
+        "You got at work late",
+        "Yeap",
+        "Hiii",
+        "https://www.instagram.com/reel/DAMsmooCQV8/?igsh=MWJwNzRuMnNpd3I2dg==",
+        "Meaning please?",
+        "Hey",
+        "Just nakunze the caption on it",
+        "Are you not able to interpret it ??",
+        "Umeze neza ??",
+        "Yeah, it looks like someone cheated. So advice says gentlemen should choose mother to their kids not for themselves????",
+        "At least",
+        "Yeap! U got it",
+        "Glad",
+        "Don’t let beauty overshadow character…",
+        "You should take the advice seriously 😁😁😁",
+        "Abana beza ukabareka",
+        "Busy today?",
+        "Pfite bagahe se",
+        "Not much",
+        "Mvuye munama",
+        "One I guess",
+        "Okay",
+        "orientation week assessment report f.pdf • ‎5 pages ‎document omitted",
+        "ko ushize mubwishi se",
+        "Hoya",
+        "It’s fine",
+        "😳😳",
+        "What ??",
+        "No need to say sorry",
+        "Nabibonye ko ari Joke",
+        "Okay",
+        "How busy is your week?",
+        "It depends on the day, but I’m always available whenever you need me or if there’s something I can do for you…",
+        "Thank you",
+        "Will you find an evening and see me?",
+        "When would you like me to come?",
+        "I don’t know that’s why asked first the your least busy day",
+        "How about Tomorrow or Wednesday?",
+        "Choose a day that you are least busy when you can leave at work a little bit earlier. I don’t want you to get stuck in traffic",
+        "Or we can meet on Saturday I’ll be back to my feet I’m sure",
+        "Babe, he is better than you who? He doesn’t miss any of Rambo’s moves",
+        "I miss you",
+        "He is so good 😁😃😃",
+        "And why do think I asked you to come see me?",
+        "Ever watched Rambo’s movies?",
+        "Cz I miss you 😀",
+        "All Rambo",
+        "From 1 to 4",
+        "😁😁😁 whatever",
+        "Same, I’m glad you know how perfect he is..",
+        "Have you watched last blood",
+        "It was long time ago I don’t remember which is which",
+        "Ninziza sanaaa",
+        "Urazii",
+        "Listening…",
+        "‎audio omitted",
+        "thanks for being there for your friend.",
+        "Reporting them will not return your money, just be tough on them",
+        "Thxx babe",
+        "Uzi ahantu twagiye",
+        "Hehe?",
+        "Namubwiye go araska iki",
+        "Avuga burger",
+        "Twagiye hahandi",
+        "Ehhh",
+        "At least that’s what he wanted",
+        "Sha mureke azashake umugore",
+        "Igooo",
+        "Azamushaka nakira",
+        "Friday I had terrible & sharp pain and I felt like Jordan",
+        "The developers have you cancelled?"
     ],
     'Sender': [
-        'M Prince', 'K Aline ☺️', 'M Prince', 'M Prince', 'M Prince',
-        'K Aline ☺️', 'K Aline ☺️', 'K Aline ☺️', 'K Aline ☺️', 'M Prince',
-        'M Prince', 'M Prince', 'M Prince', 'M Prince', 'M Prince',
-        'M Prince', 'M Prince', 'M Prince', 'M Prince', 'M Prince',
-        'M Prince', 'K Aline ☺️', 'K Aline ☺️', 'K Aline ☺️', 'K Aline ☺️',
-        'M Prince', 'K Aline ☺️', 'M Prince', 'M Prince', 'K Aline ☺️',
-        'K Aline ☺️', 'K Aline ☺️', 'K Aline ☺️', 'M Prince', 'M Prince',
-        'K Aline ☺️', 'K Aline ☺️', 'M Prince', 'M Prince', 'M Prince',
-        'M Prince', 'K Aline ☺️', 'K Aline ☺️', 'K Aline ☺️', 'K Aline ☺️',
-        'M Prince', 'M Prince', 'M Prince', 'M Prince', 'M Prince',
-        'M Prince', 'M Prince', 'K Aline ☺️', 'K Aline ☺️', 'M Prince',
-        'M Prince', 'K Aline ☺️', 'K Aline ☺️', 'K Aline ☺️', 'M Prince',
-        'M Prince'
+        "K Aline ☺️", "M Prince", "M Prince", "M Prince", "K Aline ☺️", "K Aline ☺️", "K Aline ☺️", "K Aline ☺️", "M Prince",
+        "M Prince", "M Prince", "M Prince", "M Prince", "K Aline ☺️", "M Prince", "K Aline ☺️", "K Aline ☺️", "M Prince", 
+        "M Prince", "K Aline ☺️", "M Prince", "M Prince", "M Prince", "M Prince", "M Prince", "K Aline ☺️", "K Aline ☺️", 
+        "K Aline ☺️", "K Aline ☺️", "K Aline ☺️", "K Aline ☺️", "M Prince", "M Prince", "M Prince", 
+        "K Aline ☺️", "K Aline ☺️", "M Prince", "M Prince", "K Aline ☺️", "M Prince", "M Prince", "K Aline ☺️", 
+        "M Prince", "K Aline ☺️", "M Prince", "M Prince", "K Aline ☺️", "K Aline ☺️", "M Prince", "K Aline ☺️", 
+        "M Prince", "K Aline ☺️", "K Aline ☺️", "M Prince", "M Prince", "K Aline ☺️", "K Aline ☺️", "M Prince", 
+        "K Aline ☺️", "M Prince", "M Prince", "K Aline ☺️", "K Aline ☺️", "M Prince", "M Prince", "K Aline ☺️", 
+        "M Prince", "K Aline ☺️", "M Prince", "K Aline ☺️", "K Aline ☺️", "M Prince", "M Prince"
     ],
     'Receiver': [
-        'K Aline' for _ in range(70)  # Adjusted to match the number of messages
+        "M Prince", "K Aline ☺️", "M Prince", "K Aline ☺️", "M Prince", "K Aline ☺️", "K Aline ☺️", "M Prince", "K Aline ☺️", 
+        "K Aline ☺️", "K Aline ☺️", "M Prince", "M Prince", "M Prince", "K Aline ☺️", "K Aline ☺️", "K Aline ☺️", "M Prince", 
+        "M Prince", "K Aline ☺️", "M Prince", "K Aline ☺️", "M Prince", "M Prince", "K Aline ☺️", "K Aline ☺️", "M Prince", 
+        "M Prince", "K Aline ☺️", "M Prince", "K Aline ☺️", "K Aline ☺️", "K Aline ☺️", "M Prince", "K Aline ☺️", 
+        "M Prince", "K Aline ☺️", "K Aline ☺️", "M Prince", "M Prince", "K Aline ☺️", "M Prince", "K Aline ☺️", 
+        "M Prince", "K Aline ☺️", "K Aline ☺️", "M Prince", "M Prince", "K Aline ☺️", "M Prince", "K Aline ☺️", 
+        "M Prince", "K Aline ☺️", "K Aline ☺️", "K Aline ☺️", "M Prince", "M Prince", "M Prince", "K Aline ☺️", 
+        "K Aline ☺️", "K Aline ☺️", "M Prince", "M Prince", "M Prince", "K Aline ☺️", "K Aline ☺️", "M Prince", 
+        "K Aline ☺️", "M Prince", "M Prince", "K Aline ☺️", "K Aline ☺️", "M Prince", "K Aline ☺️", "M Prince", 
+        "K Aline ☺️", "K Aline ☺️", "M Prince", "K Aline ☺️", "M Prince", "K Aline ☺️", "M Prince", "M Prince", 
+        "K Aline ☺️", "M Prince", "K Aline ☺️", "K Aline ☺️", "M Prince", "K Aline ☺️", "M Prince", "K Aline ☺️", 
+        "K Aline ☺️", "M Prince", "M Prince", "K Aline ☺️", "K Aline ☺️", "M Prince", "K Aline ☺️", "M Prince"
     ]
 }
 
-# Remove the message that says "‎This message was deleted."
-remove_message = "‎This message was deleted."
-filtered_data = [(msg, sender) for msg, sender in zip(data['Message'], data['Sender']) if msg != remove_message]
+# To make sure all arrays are the same length
+max_length = max(len(data['Message']), len(data['Sender']), len(data['Receiver']))
 
-# Unzip the filtered data
-filtered_messages, filtered_senders = zip(*filtered_data)
+# Extend Sender and Receiver lists if they are shorter than the longest list
+data['Sender'] += ["Unknown"] * (max_length - len(data['Sender']))
+data['Receiver'] += ["Unknown"] * (max_length - len(data['Receiver']))
 
-# Update data
-data['Message'] = list(filtered_messages)
-data['Sender'] = list(filtered_senders)
-data['Receiver'] = ['K Aline' for _ in range(len(data['Message']))]  # Update Receiver based on the remaining messages
+# Create DataFrame from the data
+chat_data = pd.DataFrame(data)
 
-# Check that lengths are consistent
-assert len(data['Message']) == len(data['Sender']) == len(data['Receiver']), \
-    "Length mismatch between Message, Sender, and Receiver."
+# Initialize session state for messages
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
-# Creating the DataFrame
-df = pd.DataFrame(data)
+# Function to get a response based on the user's input
+def get_chatbot_response(user_message):
+    # Simple AI response logic
+    possible_responses = chat_data[chat_data['Message'].str.contains(user_message, case=False, na=False)]
+    
+    # If there are matching responses in the dataset
+    if not possible_responses.empty:
+        # Randomly select a sender's response
+        response_row = possible_responses.sample(n=1).iloc[0]
+        return f"{response_row['Sender']}: {response_row['Message']}"
+    
+    # Default response if no match is found
+    return "I'm not sure how to respond to that. Can you elaborate?"
 
-# Model training
-model = make_pipeline(TfidfVectorizer(), MultinomialNB())
-model.fit(df['Message'], df['Message'])  # Using Message as both features and labels for simplicity
+# Streamlit UI
+st.title("Chatbot - M Prince & K Aline Conversation")
 
-# Streamlit app
-st.title("Chatbot")
-user_input = st.text_input("You: ", "")
+# User input
+user_input = st.text_input("You:", "")
 
+# Respond to user input
 if st.button("Send"):
     if user_input:
-        prediction = model.predict([user_input])[0]
-        st.write(f"K Aline: {prediction}")
-    else:
-        st.write("Please enter a message.")
+        # Add user message to the chat
+        st.session_state.messages.append({"sender": "You", "message": user_input})
+        
+        # Get AI response
+        ai_response = get_chatbot_response(user_input)
+        
+        # Add AI response to the chat
+        st.session_state.messages.append({"sender": "Chatbot", "message": ai_response})
+
+# Display messages
+for msg in st.session_state.messages:
+    st.write(f"**{msg['sender']}:** {msg['message']}")
