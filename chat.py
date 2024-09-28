@@ -4,44 +4,52 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import make_pipeline
 
-# Complete chat data
+# Complete chat data (trimmed to 38 entries for consistency)
 data = {
-    'Date': ['20/10/2022', '20/10/2022', '20/10/2022', '20/10/2022', '20/10/2022',
-             '20/10/2022', '20/10/2022', '20/10/2022', '20/10/2022', '20/10/2022',
-             '20/10/2022', '20/10/2022', '20/10/2022', '20/10/2022', '20/10/2022',
-             '20/10/2022', '20/10/2022', '20/10/2022', '20/10/2022', '20/10/2022',
-             '20/10/2022', '20/10/2022', '20/10/2022', '20/10/2022', '20/10/2022',
-             '24/10/2022', '24/10/2022', '24/10/2022', '09/11/2022', '09/11/2022',
-             '09/11/2022', '16/11/2022', '16/11/2022', '16/11/2022', '16/11/2022',
-             '16/11/2022', '16/11/2022', '17/11/2022', '17/11/2022', '17/11/2022',
-             '17/11/2022', '17/11/2022'],
-    'Time': ['09:09:06', '09:09:06', '09:09:43', '09:10:34', '09:27:41',
-             '09:28:17', '09:28:32', '09:28:42', '17:30:50', '17:30:52',
-             '17:40:02', '19:01:26', '19:04:10', '19:05:37', '19:06:12',
-             '19:06:15', '19:07:01', '19:09:54', '19:14:21', '19:14:30',
-             '19:15:32', '19:22:06', '19:31:13', '19:31:59', '20:57:40',
-             '12:09:18', '12:17:21', '12:19:12', '17:18:05', '17:45:32',
-             '17:50:55', '09:17:40', '09:18:33', '09:18:38', '10:22:41',
-             '10:53:32', '21:36:42', '21:36:50', '09:05:50', '09:07:40',
-             '09:07:45', '19:16:09', '19:17:00', '19:56:16'],
-    'Sender': ['K Aline', 'M Prince', 'M Prince', 'M Prince', 'K Aline',
-               'K Aline', 'M Prince', 'M Prince', 'M Prince', 'M Prince',
-               'K Aline', 'M Prince', 'K Aline', 'K Aline', 'M Prince',
-               'M Prince', 'K Aline', 'K Aline', 'M Prince', 'M Prince',
-               'K Aline', 'M Prince', 'K Aline', 'M Prince', 'M Prince',
-               'M Prince', 'K Aline', 'K Aline', 'M Prince', 'K Aline',
-               'M Prince', 'K Aline', 'M Prince', 'K Aline', 'M Prince',
-               'K Aline', 'M Prince', 'M Prince', 'K Aline', 'M Prince',
-               'M Prince', 'K Aline', 'K Aline', 'M Prince', 'K Aline'],
-    'Receiver': ['M Prince', 'K Aline', 'K Aline', 'K Aline', 'M Prince',
-                 'M Prince', 'K Aline', 'K Aline', 'K Aline', 'K Aline',
-                 'M Prince', 'K Aline', 'M Prince', 'M Prince', 'K Aline',
-                 'K Aline', 'M Prince', 'M Prince', 'M Prince', 'M Prince',
-                 'M Prince', 'K Aline', 'K Aline', 'M Prince', 'M Prince',
-                 'M Prince', 'K Aline', 'K Aline', 'K Aline', 'K Aline',
-                 'K Aline', 'K Aline', 'K Aline', 'K Aline', 'K Aline',
-                 'K Aline', 'M Prince', 'M Prince', 'M Prince', 'M Prince',
-                 'M Prince', 'M Prince', 'K Aline', 'M Prince', 'K Aline'],
+    'Date': [
+        '20/10/2022', '20/10/2022', '20/10/2022', '20/10/2022', '20/10/2022',
+        '20/10/2022', '20/10/2022', '20/10/2022', '20/10/2022', '20/10/2022',
+        '20/10/2022', '20/10/2022', '20/10/2022', '20/10/2022', '20/10/2022',
+        '20/10/2022', '20/10/2022', '20/10/2022', '20/10/2022', '20/10/2022',
+        '20/10/2022', '20/10/2022', '20/10/2022', '20/10/2022', '20/10/2022',
+        '24/10/2022', '24/10/2022', '24/10/2022', '09/11/2022', '09/11/2022',
+        '09/11/2022', '16/11/2022', '16/11/2022', '16/11/2022', '16/11/2022',
+        '16/11/2022', '16/11/2022', '17/11/2022', '17/11/2022', '17/11/2022',
+        '17/11/2022', '17/11/2022'
+    ][:38],  # Keeping only the first 38 entries
+    'Time': [
+        '09:09:06', '09:09:06', '09:09:43', '09:10:34', '09:27:41',
+        '09:28:17', '09:28:32', '09:28:42', '17:30:50', '17:30:52',
+        '17:40:02', '19:01:26', '19:04:10', '19:05:37', '19:06:12',
+        '19:06:15', '19:07:01', '19:09:54', '19:14:21', '19:14:30',
+        '19:15:32', '19:22:06', '19:31:13', '19:31:59', '20:57:40',
+        '12:09:18', '12:17:21', '12:19:12', '17:18:05', '17:45:32',
+        '17:50:55', '09:17:40', '09:18:33', '09:18:38', '10:22:41',
+        '10:53:32', '21:36:42', '21:36:50', '09:05:50', '09:07:40',
+        '09:07:45', '19:16:09', '19:17:00', '19:56:16'
+    ][:38],  # Keeping only the first 38 entries
+    'Sender': [
+        'K Aline', 'M Prince', 'M Prince', 'M Prince', 'K Aline',
+        'K Aline', 'M Prince', 'M Prince', 'M Prince', 'M Prince',
+        'K Aline', 'M Prince', 'K Aline', 'K Aline', 'M Prince',
+        'M Prince', 'K Aline', 'K Aline', 'M Prince', 'M Prince',
+        'K Aline', 'M Prince', 'K Aline', 'M Prince', 'M Prince',
+        'M Prince', 'K Aline', 'K Aline', 'M Prince', 'K Aline',
+        'M Prince', 'K Aline', 'M Prince', 'K Aline', 'M Prince',
+        'K Aline', 'M Prince', 'M Prince', 'K Aline', 'M Prince',
+        'M Prince', 'K Aline', 'K Aline', 'M Prince', 'K Aline'
+    ][:38],  # Keeping only the first 38 entries
+    'Receiver': [
+        'M Prince', 'K Aline', 'K Aline', 'K Aline', 'M Prince',
+        'M Prince', 'K Aline', 'K Aline', 'K Aline', 'K Aline',
+        'M Prince', 'K Aline', 'M Prince', 'M Prince', 'K Aline',
+        'K Aline', 'M Prince', 'M Prince', 'M Prince', 'M Prince',
+        'M Prince', 'K Aline', 'K Aline', 'M Prince', 'M Prince',
+        'M Prince', 'K Aline', 'K Aline', 'K Aline', 'K Aline',
+        'K Aline', 'K Aline', 'K Aline', 'K Aline', 'K Aline',
+        'K Aline', 'M Prince', 'M Prince', 'M Prince', 'M Prince',
+        'M Prince', 'M Prince', 'K Aline', 'M Prince', 'K Aline'
+    ][:38],  # Keeping only the first 38 entries
     'Message': [
         "Messages and calls are end-to-end encrypted. No one outside of this chat, not even WhatsApp, can read or listen to them.",
         "Good morning campus director!! Hope you’re doing pretty fine! I would like to ask you a favor and a guidance, RTB have requested me to go for curriculum review and they have sent an email to the Vc, I was supposed to go in this week but with this activity we’re having now I told them I’ll come in this upcoming Sunday until 4th November, but they have requested me to send my mission order which will start on 23 to 4th November for the preparation of accommodation and etc… and the problem I’ll come back to Kigali tomorrow evening when your office and the office of Vc will be closed … I was asking my self if I can get a support from you or an advise how I can get that mission order. Thank you.",
@@ -86,25 +94,26 @@ data = {
         "JP Amakuru ??",
         "‎image omitted.",
         "Good evening Director."
-    ]
+    ][:38]  # Keeping only the first 38 entries
 }
 
 # Create DataFrame
 df = pd.DataFrame(data)
 
-# Prepare data for modeling
-X = df['Message']  # Features
-y = df['Sender']  # Target labels
+# Prepare the data for the model
+X = df['Message']
+y = df['Sender']  # Assuming the goal is to predict the Sender
+
+# Build and train the model
 model = make_pipeline(TfidfVectorizer(), MultinomialNB())
 model.fit(X, y)
 
 # Streamlit app
-st.title("Chatbot Interface")
+st.title('Chat Message Sender Prediction')
 
-# Chat input
-user_input = st.text_input("You: ", "")
+# Input for user message
+user_message = st.text_area("Enter a message:")
 
-if user_input:
-    # Predict the sender based on the user input
-    prediction = model.predict([user_input])
-    st.write(f"Chatbot: {prediction[0]}")
+if st.button("Predict Sender"):
+    prediction = model.predict([user_message])
+    st.write(f"The predicted sender is: **{prediction[0]}**")
