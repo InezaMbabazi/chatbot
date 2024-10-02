@@ -12,85 +12,32 @@ headers = {
     'Authorization': f'Bearer {API_TOKEN}'
 }
 
-# Function to fetch all courses (same as before)
-# ... [existing fetch_all_courses function here]
+# Function to fetch all courses
+def fetch_all_courses():
+    response = requests.get(f"{BASE_URL}/courses", headers=headers)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        st.error("Error fetching courses.")
+        return []
 
 # Function to fetch assignment groups (same as before)
-# ... [existing fetch_assignment_groups function here]
+# ...
 
 # Function to fetch assignments (same as before)
-# ... [existing fetch_assignments function here]
+# ...
 
 # Function to fetch student submissions for an assignment (same as before)
-# ... [existing fetch_grades function here]
+# ...
 
 # Function to fetch student names (same as before)
-# ... [existing fetch_student_name function here]
+# ...
 
 # Function to calculate total grades and format data for transcripts
-def format_gradebook(course_id):
-    gradebook = []
-    assignment_groups = fetch_assignment_groups(course_id)
-    
-    for group in assignment_groups:
-        assignments = fetch_assignments(course_id, group['id'])
-        for assignment in assignments:
-            grades = fetch_grades(course_id, assignment['id'])
-            for submission in grades:
-                student_id = submission['user_id']
-                student_name = fetch_student_name(student_id)
-                grade = submission.get('score', 0)
-                max_score = assignment.get('points_possible', 0)
-                
-                # Ensure grades are numeric
-                grade = float(grade) if grade is not None else 0
-
-                gradebook.append({
-                    'Student ID': student_id,
-                    'Student Name': student_name,
-                    'Assignment Name': assignment['name'],
-                    'Grade': grade,
-                    'Max Score': max_score
-                })
-    
-    df = pd.DataFrame(gradebook)
-
-    # Group by student and calculate the total grade
-    if not df.empty:
-        df = df.groupby(['Student ID', 'Student Name']).agg({
-            'Grade': 'sum'
-        }).reset_index()
-    
-    return df
+# ...
 
 # Function to display a transcript for a specific student
-def display_student_transcript(student_id, student_name):
-    st.header(f"Transcript for {student_name} (ID: {student_id})")
-    
-    # Fetch all grades across courses
-    all_grades = []
-    courses = fetch_all_courses()
-    for course in courses:
-        course_id = course['id']
-        course_name = course['name']
-        df_gradebook = format_gradebook(course_id)
-
-        # Filter grades for the selected student
-        student_grades = df_gradebook[df_gradebook['Student ID'] == student_id]
-        if not student_grades.empty:
-            student_grades['Course Name'] = course_name
-            all_grades.append(student_grades)
-
-    # Combine all grades into one DataFrame
-    if all_grades:
-        transcript_df = pd.concat(all_grades)
-        st.dataframe(transcript_df[['Course Name', 'Grade']])
-        
-        # Display total grade
-        total_grade = transcript_df['Grade'].sum()
-        st.subheader(f"Total Grade: {total_grade}")
-    else:
-        st.write("No grades found for this student.")
+# ...
 
 # Streamlit display function to show courses and their grades
 def display_all_courses_grades():
@@ -126,7 +73,7 @@ if __name__ == "__main__":
     students = set()  # Use a set to avoid duplicates
 
     # Fetch all grades to populate the student list
-    courses = fetch_all_courses()
+    courses = fetch_all_courses()  # Ensure this function is defined above
     for course in courses:
         course_id = course['id']
         df_gradebook = format_gradebook(course_id)
@@ -135,7 +82,7 @@ if __name__ == "__main__":
     # Display the transcript option in the sidebar
     selected_student_id = st.sidebar.selectbox("Select a Student", list(students))
     if selected_student_id:
-        student_name = fetch_student_name(selected_student_id)
+        student_name = fetch_student_name(selected_student_id)  # Ensure this function is defined
         display_student_transcript(selected_student_id, student_name)
 
     display_all_courses_grades()
