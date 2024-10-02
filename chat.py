@@ -4,7 +4,7 @@ import streamlit as st
 from datetime import datetime
 
 # Replace with your Canvas API token and base URL
-API_TOKEN = 'YOUR_API_TOKEN'
+API_TOKEN = '1941~FXJZ2tYC2DTWQr923eFTaXy473rK73A4KrYkT3uVy7WeYV9fyJQ4khH4MAGEH3Tf'
 BASE_URL = 'https://kepler.instructure.com/api/v1'
 
 # Set headers for authentication
