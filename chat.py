@@ -1,8 +1,9 @@
 import streamlit as st
 import openai
 
-# Load OpenAI API key from secrets
-openai.api_key =  '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'
+# Load OpenAI API key from Streamlit secrets
+openai.api_key = st.secrets["openai"]["api_key"]
+
 # Streamlit UI
 st.title("Kepler College Chatbot")
 
