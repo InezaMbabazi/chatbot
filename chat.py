@@ -4,17 +4,21 @@ from nltk.tokenize import word_tokenize
 import streamlit as st
 
 # Set the NLTK data path
-nltk.data.path.append('./.nltk_data')  # Ensure this path is correct
+nltk.data.path.append('./.nltk_data')  # Adjust this path if necessary
 
 # Function to ensure the required NLTK resources are downloaded
 def ensure_nltk_resources():
-    resources = ['punkt', 'punkt_tab']
-    for resource in resources:
-        try:
-            nltk.data.find(f'tokenizers/{resource}')
-        except LookupError:
-            st.write(f"Downloading '{resource}' tokenizer...")
-            nltk.download(resource)
+    try:
+        nltk.data.find('tokenizers/punkt')
+    except LookupError:
+        st.write("Downloading 'punkt' tokenizer...")
+        nltk.download('punkt')
+    
+    try:
+        nltk.data.find('tokenizers/punkt_tab')
+    except LookupError:
+        st.write("Downloading 'punkt_tab' tokenizer...")
+        nltk.download('punkt_tab')
 
 # Download required resources
 ensure_nltk_resources()
@@ -29,23 +33,28 @@ def preprocess_text(text):
         st.write(f"Error in tokenizing text: {e}")
         return []
 
-# Set the title of the app
-st.title("Chatbot Questions Processing")
-
 # Load your DataFrame
-try:
-    df = pd.read_csv('Chatbot.csv')
-except FileNotFoundError:
-    st.write("Error: 'Chatbot.csv' file not found.")
-    st.stop()
+df = pd.read_csv('Chatbot.csv')
 
 # Check if 'Questions' column exists
 if 'Questions' in df.columns:
     # Process the 'Questions' column
     df['Processed_Questions'] = df['Questions'].apply(preprocess_text)
 
-    # Display the original and processed questions with a section header
-    st.subheader("Original and Processed Questions:")
-    st.dataframe(df[['Questions', 'Processed_Questions']].head())
+    # Chatbot interaction
+    st.title("Chatbot")
+    user_input = st.text_input("You:", "")
+    
+    if user_input:
+        # Preprocess user input
+        processed_input = preprocess_text(user_input)
+        
+        # Simple response logic (this can be enhanced)
+        if processed_input in df['Processed_Questions'].tolist():
+            response = df[df['Processed_Questions'].apply(lambda x: x == processed_input)]['Response'].values[0]
+        else:
+            response = "I'm sorry, I don't understand that."
+
+        st.write("Chatbot:", response)
 else:
     st.write("The 'Questions' column is not found in the DataFrame.")
