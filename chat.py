@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import nltk
 from nltk.tokenize import word_tokenize
@@ -8,11 +9,20 @@ import openai
 # Set your OpenAI API key
 openai.api_key = "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"
 
-# Ensure NLTK data path includes your local .nltk_data folder
-nltk.data.path.append('.nltk_data')
+# Append NLTK data path
+nltk.data.path.append(os.path.join(os.getcwd(), '.nltk_data'))
 
-# Download stopwords if not already downloaded
-nltk.download('stopwords', download_dir='.nltk_data')
+# Ensure necessary NLTK resources are downloaded
+try:
+    nltk.data.find('tokenizers/punkt')
+except LookupError:
+    nltk.download('punkt', download_dir=os.path.join(os.getcwd(), '.nltk_data'))
+
+# Ensure stopwords are available
+try:
+    nltk.data.find('corpora/stopwords')
+except LookupError:
+    nltk.download('stopwords', download_dir=os.path.join(os.getcwd(), '.nltk_data'))
 
 # Load the dataset
 df = pd.read_csv('Chatbot.csv')
