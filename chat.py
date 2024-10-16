@@ -8,7 +8,7 @@ import streamlit as st
 nltk.data.path.append('./.nltk_data')  # Adjust this path if necessary
 
 # Set your OpenAI API key
-openai.api_key = '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'  # Replace with your API key
+openai.api_key = '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'  # Replace with your actual API key
 
 # Function to ensure the required NLTK resources are downloaded
 def ensure_nltk_resources():
@@ -23,8 +23,12 @@ ensure_nltk_resources()
 
 # Function to preprocess text
 def preprocess_text(text):
-    tokens = word_tokenize(text.lower())
-    return tokens
+    try:
+        tokens = word_tokenize(text.lower())
+        return tokens
+    except LookupError as e:
+        st.write(f"Error in tokenizing text: {e}")
+        return []
 
 # Load your DataFrame
 df = pd.read_csv('Chatbot.csv')
