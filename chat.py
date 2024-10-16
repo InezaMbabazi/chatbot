@@ -5,10 +5,10 @@ from nltk.tokenize import word_tokenize
 import streamlit as st
 
 # Set the NLTK data path
-nltk.data.path.append('./.nltk_data')  # Adjust this path if necessary
+nltk.data.path.append('./.nltk_data')
 
-# Set the OpenAI API key from Streamlit secrets
-openai.api_key = st.secrets["general"]["OPENAI_API_KEY"]
+# Load the OpenAI API key from the secrets file
+openai.api_key = st.secrets["general"]["OPENAI_API_KEY"]  # Load API key securely
 
 # Function to ensure the required NLTK resources are downloaded
 def ensure_nltk_resources():
@@ -38,7 +38,7 @@ if 'Questions' in df.columns:
 def get_openai_response(question):
     try:
         response = openai.ChatCompletion.create(
-            model='gpt-3.5-turbo',  # or whichever model you want to use
+            model='gpt-3.5-turbo',
             messages=[{"role": "user", "content": question}]
         )
         return response['choices'][0]['message']['content']
