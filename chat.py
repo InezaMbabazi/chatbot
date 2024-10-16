@@ -32,12 +32,12 @@ data = {
 # Convert to DataFrame
 df = pd.DataFrame(data)
 
-# Preprocess text
+# Preprocess text using lemmatization and tokenization
 lemmatizer = WordNetLemmatizer()
 
 def preprocess_text(text):
-    tokens = word_tokenize(text.lower())
-    lemmatized = [lemmatizer.lemmatize(token) for token in tokens]
+    tokens = word_tokenize(text.lower())  # Tokenize text
+    lemmatized = [lemmatizer.lemmatize(token) for token in tokens]  # Lemmatize tokens
     return ' '.join(lemmatized)
 
 # Apply preprocessing to questions
@@ -47,7 +47,7 @@ df['Processed_Questions'] = df['Questions'].apply(preprocess_text)
 def get_chatgpt_response(user_input):
     try:
         response = openai.Completion.create(
-            engine="text-davinci-003",  # You can also use other engines like "gpt-3.5-turbo"
+            engine="text-davinci-003",  # You can also use "gpt-3.5-turbo"
             prompt=user_input,
             max_tokens=150,
             n=1,
@@ -58,15 +58,15 @@ def get_chatgpt_response(user_input):
     except Exception as e:
         return f"Error with ChatGPT: {e}"
 
-# Fallback function for similarity-based matching
+# Fallback function for similarity-based matching using cosine similarity
 def get_fallback_response(user_input):
-    user_input_processed = preprocess_text(user_input)
+    user_input_processed = preprocess_text(user_input)  # Preprocess user input
     
-    # Create TF-IDF vectors
+    # Create TF-IDF vectors including the user input
     vectorizer = TfidfVectorizer().fit_transform(df['Processed_Questions'].tolist() + [user_input_processed])
     vectors = vectorizer.toarray()
 
-    # Calculate cosine similarity
+    # Calculate cosine similarity between the user input and all questions
     cosine_similarities = cosine_similarity(vectors[-1:], vectors[:-1]).flatten()
     
     # Get the index of the most similar question
@@ -75,7 +75,7 @@ def get_fallback_response(user_input):
     # Return the corresponding answer
     return df['Answers'][index]
 
-# Main chatbot function combining ChatGPT and fallback
+# Main chatbot function combining ChatGPT and fallback method
 def chatbot(user_input):
     response = get_chatgpt_response(user_input)
     
@@ -85,14 +85,13 @@ def chatbot(user_input):
     
     return response
 
-# Streamlit UI
+# Streamlit UI for the chatbot
 st.title("Kepler College Chatbot")
 
-# User input text box
+# Input text box for user to ask a question
 user_input = st.text_input("Ask me anything about Kepler College:")
 
-# Display response when the user submits a query
+# Display chatbot response when user submits a query
 if user_input:
     response = chatbot(user_input)
     st.write(f"Chatbot: {response}")
-
