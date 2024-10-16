@@ -4,3 +4,5 @@ openai
 pandas
 numpy
 scikit-learn
+punkt
+wordnet
