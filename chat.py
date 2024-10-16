@@ -74,7 +74,7 @@ if 'conversation' not in st.session_state:
     st.session_state.conversation = []
 
 # User input
-user_input = st.text_input("You:", "")
+user_input = st.text_input("You:", "", key="user_input")
 
 if user_input:
     # Preprocess user input
@@ -90,12 +90,17 @@ if user_input:
         # If no predefined answer is found, call OpenAI API for broader information
         context = df.to_string(index=False)  # Create a context from the entire DataFrame
         chatbot_response = get_openai_response(user_input, context)
+        # Add additional contact information if the answer is not found in the dataset
+        chatbot_response += "\n\nIf you need more information on something you don't have, contact registrar@kepler.ac.rw or 0789123100."
 
     # Add the conversation to session state
     st.session_state.conversation.append({"user": user_input, "chatbot": chatbot_response})
 
     # Keep only the last 3 conversations
     st.session_state.conversation = st.session_state.conversation[-3:]
+
+    # Clear the input box after pressing Enter
+    st.session_state["user_input"] = ""  # Clear input box content
 
 # Display the last 3 conversations with new messages on top
 if st.session_state.conversation:
