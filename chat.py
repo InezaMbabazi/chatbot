@@ -1,37 +1,29 @@
-import streamlit as st
 import pandas as pd
 import nltk
 from nltk.tokenize import word_tokenize
-from nltk.stem import WordNetLemmatizer
+from nltk.corpus import stopwords
+import streamlit as st
 
-# Set up the NLTK data directory
+# Ensure the punkt tokenizer is available
 nltk.data.path.append('.nltk_data')
 
-# Load the CSV file into a DataFrame
+# Load your dataset
 df = pd.read_csv('Chatbot.csv')
 
-# Preprocess text
-lemmatizer = WordNetLemmatizer()
-
+# Define a preprocessing function
 def preprocess_text(text):
-    tokens = word_tokenize(text.lower())  # Tokenize text
-    lemmatized_tokens = [lemmatizer.lemmatize(token) for token in tokens]  # Lemmatize
-    return ' '.join(lemmatized_tokens)
+    # Tokenize text
+    tokens = word_tokenize(text.lower())  
+    # Remove stopwords
+    stop_words = set(stopwords.words('english'))
+    tokens = [word for word in tokens if word.isalnum() and word not in stop_words]
+    return ' '.join(tokens)
 
-# Process the questions
+# Preprocess the Questions column
 df['Processed_Questions'] = df['Questions'].apply(preprocess_text)
 
-# Define a function to get responses
-def get_response(user_input):
-    # Simple logic to find the closest matching question
-    for index, row in df.iterrows():
-        if user_input in row['Processed_Questions']:
-            return row['Answers']
-    return "I'm sorry, I don't understand that."
-
-# Streamlit app
+# Streamlit application setup
 st.title("Chatbot")
-user_input = st.text_input("You:")
-if st.button("Send"):
-    response = get_response(preprocess_text(user_input))
-    st.write(f"Bot: {response}")
+user_input = st.text_input("Ask me anything:")
+if user_input:
+    st.write("You asked:", user_input)
