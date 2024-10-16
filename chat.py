@@ -66,8 +66,16 @@ def get_response_from_dataframe(user_input):
             return row['Answers']
     return None
 
+# Function to get user feedback
+def collect_feedback(response):
+    feedback = st.radio("Was this answer helpful?", ("Yes", "No"))
+    if feedback == "Yes":
+        st.success("Thank you for your feedback!")
+    else:
+        st.error("Sorry to hear that. We'll strive to improve!")
+
 # Streamlit chatbot interface
-st.title("Chatbot")
+st.title("Interactive Chatbot")
 user_input = st.text_input("You:", "")
 
 if user_input:
@@ -80,9 +88,25 @@ if user_input:
     if response:
         # If a match is found in the DataFrame, use the corresponding answer
         st.write(f"Chatbot: {response}")
+        
+        # Ask if the user would like to know more about the topic
+        follow_up = st.radio("Would you like to know more about this topic?", ("Yes", "No"))
+        if follow_up == "Yes":
+            st.write("Please specify what else you would like to know!")
+    
+        # Collect feedback
+        collect_feedback(response)
     else:
         # If no predefined answer is found, call OpenAI API for broader information
         # Additionally, provide context from the DataFrame
         context = df.to_string(index=False)  # Create a context from the entire DataFrame
         response = get_openai_response(user_input, context)
         st.write(f"Chatbot: {response}")
+        
+        # Ask if the user would like to know more about the topic
+        follow_up = st.radio("Would you like to ask something else?", ("Yes", "No"))
+        if follow_up == "Yes":
+            st.write("Please ask your question!")
+    
+        # Collect feedback
+        collect_feedback(response)
