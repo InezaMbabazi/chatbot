@@ -17,12 +17,8 @@ openai.api_key = 'sk-proj-vTkxTmK4MWYQsYU-Wn4wsVV87_yWtMDdpS8rjoNaT-cLfSjB8p6g_u
 
 # Load the dataset from GitHub
 data_url = 'https://github.com/InezaMbabazi/chatbot/blob/main/Chatbot.csv'  # Replace with your actual GitHub URL
-try:
-    # Read CSV with error handling
-    df = pd.read_csv(data_url, on_bad_lines='warn', encoding='utf-8')
-    print(df.head())  # Optional: Print the first few rows for verification
-except Exception as e:
-    print(f"An error occurred: {e}")
+df = pd.read_csv(data_url)
+
 # Preprocess text
 lemmatizer = WordNetLemmatizer()
 
