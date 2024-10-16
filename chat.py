@@ -1,38 +1,13 @@
 import openai
-import nltk
 import pandas as pd
-from nltk.tokenize import word_tokenize
 import streamlit as st
+import os
 
-# Set the NLTK data path
-nltk.data.path.append('./.nltk_data')
-
-# Set your OpenAI API key
-openai.api_key ='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'  # Replace with your actual API key
-
-# Function to ensure the required NLTK resources are downloaded
-def ensure_nltk_resources():
-    try:
-        nltk.data.find('tokenizers/punkt')
-    except LookupError:
-        st.write("Downloading 'punkt' tokenizer...")
-        nltk.download('punkt')
-
-# Download required resources
-ensure_nltk_resources()
-
-# Function to preprocess text
-def preprocess_text(text):
-    tokens = word_tokenize(text.lower())
-    return tokens
+# Set your OpenAI API key from environment variable
+openai.api_key = os.getenv('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')  # Make sure to set this in your environment
 
 # Load your DataFrame
 df = pd.read_csv('Chatbot.csv')
-
-# Check if 'Questions' column exists
-if 'Questions' in df.columns:
-    # Process the 'Questions' column
-    df['Processed_Questions'] = df['Questions'].apply(preprocess_text)
 
 # Function to get response from OpenAI
 def get_openai_response(question):
@@ -50,11 +25,8 @@ st.title("Chatbot")
 user_input = st.text_input("You:", "")
 
 if user_input:
-    # Preprocess user input
-    processed_input = preprocess_text(user_input)
-
-    # Check for predefined responses
-    response = df[df['Processed_Questions'].apply(lambda x: x == processed_input)]['Answers'].values
+    # Check for predefined responses in the DataFrame
+    response = df[df['Questions'].str.contains(user_input, case=False, na=False)]['Answers'].values
     if len(response) > 0:
         response = response[0]
     else:
