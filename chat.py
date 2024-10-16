@@ -1,14 +1,14 @@
 import openai
-import nltk
 import pandas as pd
-from nltk.tokenize import word_tokenize
 import streamlit as st
+import nltk
+from nltk.tokenize import word_tokenize
 
 # Set the NLTK data path
-nltk.data.path.append('./.nltk_data')
+nltk.data.path.append('./.nltk_data')  # Ensure this path is included
 
-# Set your OpenAI API key
-openai.api_key = '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'  # Make sure to replace with your actual API key
+# Directly set the OpenAI API key (use with caution)
+openai.api_key = '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'
 
 # Function to ensure the required NLTK resources are downloaded
 def ensure_nltk_resources():
@@ -16,23 +16,33 @@ def ensure_nltk_resources():
         nltk.data.find('tokenizers/punkt')
     except LookupError:
         st.write("Downloading 'punkt' tokenizer...")
-        nltk.download('punkt')
+        nltk.download('punkt', quiet=True)  # Download quietly
+        st.success("Downloaded 'punkt' tokenizer.")
 
 # Download required resources
 ensure_nltk_resources()
 
 # Function to preprocess text
 def preprocess_text(text):
-    tokens = word_tokenize(text.lower())
-    return tokens
+    try:
+        tokens = word_tokenize(text.lower())
+        return tokens
+    except Exception as e:
+        st.error(f"Error processing text: {str(e)}")
+        return []
 
 # Load your DataFrame
-df = pd.read_csv('Chatbot.csv')
-
-# Check if 'Questions' column exists
-if 'Questions' in df.columns:
-    # Process the 'Questions' column
-    df['Processed_Questions'] = df['Questions'].apply(preprocess_text)
+try:
+    df = pd.read_csv('Chatbot.csv')
+    if 'Questions' not in df.columns:
+        st.error("The 'Questions' column is missing in the dataset.")
+    else:
+        # Process the 'Questions' column
+        df['Processed_Questions'] = df['Questions'].apply(preprocess_text)
+except FileNotFoundError:
+    st.error("Chatbot.csv file not found. Please upload the file.")
+except Exception as e:
+    st.error(f"Error loading dataset: {str(e)}")
 
 # Function to get response from OpenAI
 def get_openai_response(question):
