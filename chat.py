@@ -1,6 +1,7 @@
 import nltk
 import pandas as pd
 from nltk.tokenize import word_tokenize
+import streamlit as st
 
 # Set the NLTK data path
 nltk.data.path.append('./.nltk_data')  # Adjust this path if necessary
@@ -9,7 +10,7 @@ nltk.data.path.append('./.nltk_data')  # Adjust this path if necessary
 try:
     nltk.data.find('tokenizers/punkt')
 except LookupError:
-    print("Punkt tokenizer not found. Downloading...")
+    st.write("Punkt tokenizer not found. Downloading...")
     nltk.download('punkt')
 
 # Function to preprocess text
@@ -19,7 +20,7 @@ def preprocess_text(text):
         tokens = word_tokenize(text.lower())
         return tokens
     except LookupError as e:
-        print(f"Error in tokenizing text: {e}")
+        st.write(f"Error in tokenizing text: {e}")
         return []
 
 # Load your DataFrame
@@ -29,10 +30,9 @@ df = pd.read_csv('Chatbot.csv')
 if 'Questions' in df.columns:
     # Process the 'Questions' column
     df['Processed_Questions'] = df['Questions'].apply(preprocess_text)
+
+    # Display the original and processed questions
+    st.write("Original and Processed Questions:")
+    st.dataframe(df[['Questions', 'Processed_Questions']].head())
 else:
-    print("The 'Questions' column is not found in the DataFrame.")
-
-# Example of using the processed data (you can modify this part as needed)
-print(df[['Questions', 'Processed_Questions']].head())
-
-# Additional chatbot functionality goes here...
+    st.write("The 'Questions' column is not found in the DataFrame.")
