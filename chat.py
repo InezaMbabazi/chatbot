@@ -8,7 +8,7 @@ from nltk.tokenize import word_tokenize
 nltk.data.path.append('./.nltk_data')
 
 # Directly set the OpenAI API key (use with caution)
-openai.api_key = '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'
+openai.api_key = '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'
 
 # Function to ensure the required NLTK resources are downloaded
 def ensure_nltk_resources():
@@ -67,14 +67,14 @@ def get_response_from_dataframe(user_input):
     return None
 
 # Streamlit chatbot interface
-st.title("Kepler College Chatbot")
+st.title("Interactive Chatbot")
 
 # Initialize a session state for conversation history
 if 'conversation' not in st.session_state:
     st.session_state.conversation = []
 
 # User input
-user_input = st.text_input("You:", "", key="user_input")
+user_input = st.text_input("You:", "")
 
 if user_input:
     # Preprocess user input
@@ -96,9 +96,6 @@ if user_input:
 
     # Keep only the last 3 conversations
     st.session_state.conversation = st.session_state.conversation[-3:]
-
-    # Clear the input box after pressing Enter
-    st.session_state["user_input"] = ""  # Clear input box content
 
 # Display the last 3 conversations with new messages on top
 if st.session_state.conversation:
