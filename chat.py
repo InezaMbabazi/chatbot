@@ -5,10 +5,10 @@ from nltk.tokenize import word_tokenize
 import streamlit as st
 
 # Set the NLTK data path
-nltk.data.path.append('./.nltk_data')  # Adjust this path if necessary
+nltk.data.path.append('./.nltk_data')
 
 # Set your OpenAI API key
-openai.api_key = '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'  # Replace with your actual API key
+openai.api_key ='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'  # Make sure to replace with your actual API key
 
 # Function to ensure the required NLTK resources are downloaded
 def ensure_nltk_resources():
@@ -17,23 +17,14 @@ def ensure_nltk_resources():
     except LookupError:
         st.write("Downloading 'punkt' tokenizer...")
         nltk.download('punkt')
-    try:
-        nltk.data.find('tokenizers/punkt_tab')
-    except LookupError:
-        st.write("Downloading 'punkt_tab' tokenizer...")
-        nltk.download('punkt_tab')
 
 # Download required resources
 ensure_nltk_resources()
 
 # Function to preprocess text
 def preprocess_text(text):
-    try:
-        tokens = word_tokenize(text.lower())
-        return tokens
-    except LookupError as e:
-        st.write(f"Error in tokenizing text: {e}")
-        return []
+    tokens = word_tokenize(text.lower())
+    return tokens
 
 # Load your DataFrame
 df = pd.read_csv('Chatbot.csv')
@@ -47,10 +38,8 @@ if 'Questions' in df.columns:
 def get_openai_response(question):
     try:
         response = openai.ChatCompletion.create(
-            model='gpt-3.5-turbo',  # or whichever model you want to use
-            messages=[
-                {"role": "user", "content": question}
-            ]
+            model='gpt-3.5-turbo',
+            messages=[{"role": "user", "content": question}]
         )
         return response['choices'][0]['message']['content']
     except Exception as e:
