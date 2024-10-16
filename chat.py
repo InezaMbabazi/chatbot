@@ -5,10 +5,10 @@ import nltk
 from nltk.tokenize import word_tokenize
 
 # Set the NLTK data path
-nltk.data.path.append('./.nltk_data')  # Ensure this path is included
+nltk.data.path.append('./.nltk_data')
 
 # Directly set the OpenAI API key (use with caution)
-openai.api_key = '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'
+openai.api_key = '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'
 
 # Function to ensure the required NLTK resources are downloaded
 def ensure_nltk_resources():
@@ -94,8 +94,11 @@ if user_input:
     # Add the conversation to session state
     st.session_state.conversation.append({"user": user_input, "chatbot": chatbot_response})
 
-# Display the conversation history
+    # Keep only the last 3 conversations
+    st.session_state.conversation = st.session_state.conversation[-3:]
+
+# Display the last 3 conversations with new messages on top
 if st.session_state.conversation:
-    for chat in st.session_state.conversation:
+    for chat in reversed(st.session_state.conversation):  # Reverse the order for newest on top
         st.write(f"You: {chat['user']}")
         st.write(f"Chatbot: {chat['chatbot']}")
