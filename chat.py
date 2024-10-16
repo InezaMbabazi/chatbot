@@ -9,15 +9,16 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 # Download NLTK resources (only needed the first time you run the app)
-nltk.download('punkt')
-nltk.download('wordnet')
+nltk.download('punkt', quiet=True)  # quiet=True to suppress output
+nltk.download('wordnet', quiet=True)
 
 # Set up OpenAI API Key
 openai.api_key = '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'  # Replace with your actual OpenAI API key
 
-# Load the dataset from GitHub
-data_url = 'https://github.com/InezaMbabazi/chatbot/blob/main/Chatbot.csv'  # Replace with your actual GitHub URL
-df = pd.read_csv(data_url)
+# Load the dataset from Desktop
+data_path = 'C:/Users/COMPUTER/Desktop/Chatbot.csv'  # Update this path
+
+df = pd.read_csv(data_path)
 
 # Preprocess text
 lemmatizer = WordNetLemmatizer()
