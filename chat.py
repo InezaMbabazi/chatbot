@@ -67,7 +67,7 @@ def get_response_from_dataframe(user_input):
     return None
 
 # Streamlit chatbot interface
-st.title("Interactive Chatbot")
+st.title("Kepler Colleger Chatbot")
 
 # Initialize a session state for conversation history
 if 'conversation' not in st.session_state:
