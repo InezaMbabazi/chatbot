@@ -7,7 +7,7 @@ import streamlit as st
 import openai
 
 # Set your OpenAI API key
-openai.api_key = "your_openai_api_key_here"
+openai.api_key = "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"
 
 # Append NLTK data path (ensure correct path)
 nltk.data.path.append(os.path.join(os.getcwd(), '.nltk_data'))
