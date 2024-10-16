@@ -18,6 +18,14 @@ def ensure_nltk_resources():
         st.write("Downloading 'punkt' tokenizer...")
         nltk.download('punkt', quiet=True)  # Download quietly
         st.success("Downloaded 'punkt' tokenizer.")
+    
+    # Check for punkt_tab specifically
+    try:
+        nltk.data.find('tokenizers/punkt_tab')
+    except LookupError:
+        st.write("Downloading 'punkt_tab' tokenizer...")
+        nltk.download('punkt_tab', quiet=True)  # Download quietly
+        st.success("Downloaded 'punkt_tab' tokenizer.")
 
 # Download required resources
 ensure_nltk_resources()
