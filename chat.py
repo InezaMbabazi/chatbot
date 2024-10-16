@@ -3,13 +3,12 @@ import nltk
 import pandas as pd
 from nltk.tokenize import word_tokenize
 import streamlit as st
-import os  # Import the os module to access environment variables
 
 # Set the NLTK data path
 nltk.data.path.append('./.nltk_data')  # Adjust this path if necessary
 
-# Set your OpenAI API key from environment variable
-openai.api_key = st.secrets["OPENAI_API_KEY"]  # Access the secret
+# Set the OpenAI API key from Streamlit secrets
+openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 # Function to ensure the required NLTK resources are downloaded
 def ensure_nltk_resources():
@@ -40,9 +39,7 @@ def get_openai_response(question):
     try:
         response = openai.ChatCompletion.create(
             model='gpt-3.5-turbo',  # or whichever model you want to use
-            messages=[
-                {"role": "user", "content": question}
-            ]
+            messages=[{"role": "user", "content": question}]
         )
         return response['choices'][0]['message']['content']
     except Exception as e:
