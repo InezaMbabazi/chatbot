@@ -13,12 +13,6 @@ def ensure_nltk_resources():
     except LookupError:
         st.write("Downloading 'punkt' tokenizer...")
         nltk.download('punkt')
-    
-    try:
-        nltk.data.find('tokenizers/punkt_tab')
-    except LookupError:
-        st.write("Downloading 'punkt_tab' tokenizer...")
-        nltk.download('punkt_tab')
 
 # Download required resources
 ensure_nltk_resources()
@@ -36,25 +30,22 @@ def preprocess_text(text):
 # Load your DataFrame
 df = pd.read_csv('Chatbot.csv')
 
-# Check if 'Questions' column exists
-if 'Questions' in df.columns:
-    # Process the 'Questions' column
-    df['Processed_Questions'] = df['Questions'].apply(preprocess_text)
+# Process the 'Questions' column
+df['Processed_Questions'] = df['Questions'].apply(preprocess_text)
 
-    # Chatbot interaction
-    st.title("Chatbot")
-    user_input = st.text_input("You:", "")
+# Chatbot interface
+st.title("Chatbot")
+user_input = st.text_input("You:")
+
+if user_input:
+    # Preprocess user input
+    processed_input = preprocess_text(user_input)
     
-    if user_input:
-        # Preprocess user input
-        processed_input = preprocess_text(user_input)
-        
-        # Simple response logic (this can be enhanced)
-        if processed_input in df['Processed_Questions'].tolist():
-            response = df[df['Processed_Questions'].apply(lambda x: x == processed_input)]['Response'].values[0]
-        else:
-            response = "I'm sorry, I don't understand that."
-
-        st.write("Chatbot:", response)
-else:
-    st.write("The 'Questions' column is not found in the DataFrame.")
+    # Find the best matching question
+    matching_question = df[df['Processed_Questions'].apply(lambda x: set(x) == set(processed_input))]
+    
+    if not matching_question.empty:
+        response = matching_question['Answers'].values[0]
+        st.write(f"Chatbot: {response}")
+    else:
+        st.write("Chatbot: Sorry, I don't have an answer for that.")
