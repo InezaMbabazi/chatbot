@@ -3,17 +3,12 @@ import nltk
 import pandas as pd
 from nltk.tokenize import word_tokenize
 import streamlit as st
-from dotenv import load_dotenv
-import os
-
-# Load environment variables
-load_dotenv()
-
-# Set your OpenAI API key
-openai.api_key = os.getenv('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')
 
 # Set the NLTK data path
 nltk.data.path.append('./.nltk_data')
+
+# Set your OpenAI API key
+openai.api_key = 'your_api_key_here'  # Make sure to replace with your actual API key
 
 # Function to ensure the required NLTK resources are downloaded
 def ensure_nltk_resources():
@@ -44,9 +39,7 @@ def get_openai_response(question):
     try:
         response = openai.ChatCompletion.create(
             model='gpt-3.5-turbo',
-            messages=[
-                {"role": "user", "content": f"Based on the information I have, can you provide a more detailed response to: {question}"}
-            ]
+            messages=[{"role": "user", "content": question}]
         )
         return response['choices'][0]['message']['content']
     except Exception as e:
@@ -65,7 +58,7 @@ if user_input:
     if len(response) > 0:
         response = response[0]
     else:
-        # If no predefined answer is found, call OpenAI API for clarification
+        # If no predefined answer is found, call OpenAI API
         response = get_openai_response(user_input)
 
     st.write(f"Chatbot: {response}")
