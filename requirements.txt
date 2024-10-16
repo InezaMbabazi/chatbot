@@ -1,6 +1,6 @@
 streamlit
 nltk
-openai
+openai==0.28
 pandas
 numpy
 scikit-learn
