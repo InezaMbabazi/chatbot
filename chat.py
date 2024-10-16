@@ -3,20 +3,16 @@ import openai
 import nltk
 import numpy as np
 import pandas as pd
-from nltk.tokenize import word_tokenize
+from nltk.tokenize import RegexpTokenizer
 from nltk.stem import WordNetLemmatizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-# Ensure NLTK resources are available
-try:
-    nltk.data.find('tokenizers/punkt')
-except LookupError:
-    nltk.download('punkt')
-    nltk.download('wordnet')
+# Download NLTK resources (only needed the first time you run the app)
+nltk.download('wordnet')
 
 # Set up OpenAI API Key
-openai.api_key = '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'  # Replace with your actual OpenAI API key
+openai.api_key = 'YOUR_API_KEY'  # Replace with your actual OpenAI API key
 
 # Sample dataset for fallback responses
 data = {
@@ -35,12 +31,13 @@ data = {
 # Convert to DataFrame
 df = pd.DataFrame(data)
 
-# Preprocess text using lemmatization and tokenization
+# Preprocess text
 lemmatizer = WordNetLemmatizer()
+tokenizer = RegexpTokenizer(r'\w+')  # Tokenizes based on word characters
 
 def preprocess_text(text):
-    tokens = word_tokenize(text.lower())  # Tokenize text
-    lemmatized = [lemmatizer.lemmatize(token) for token in tokens]  # Lemmatize tokens
+    tokens = tokenizer.tokenize(text.lower())  # Tokenize text
+    lemmatized = [lemmatizer.lemmatize(token) for token in tokens]
     return ' '.join(lemmatized)
 
 # Apply preprocessing to questions
@@ -50,7 +47,7 @@ df['Processed_Questions'] = df['Questions'].apply(preprocess_text)
 def get_chatgpt_response(user_input):
     try:
         response = openai.Completion.create(
-            engine="text-davinci-003",  # You can also use "gpt-3.5-turbo"
+            engine="text-davinci-003",  # You can also use other engines like "gpt-3.5-turbo"
             prompt=user_input,
             max_tokens=150,
             n=1,
@@ -61,15 +58,15 @@ def get_chatgpt_response(user_input):
     except Exception as e:
         return f"Error with ChatGPT: {e}"
 
-# Fallback function for similarity-based matching using cosine similarity
+# Fallback function for similarity-based matching
 def get_fallback_response(user_input):
-    user_input_processed = preprocess_text(user_input)  # Preprocess user input
+    user_input_processed = preprocess_text(user_input)
     
-    # Create TF-IDF vectors including the user input
+    # Create TF-IDF vectors
     vectorizer = TfidfVectorizer().fit_transform(df['Processed_Questions'].tolist() + [user_input_processed])
     vectors = vectorizer.toarray()
 
-    # Calculate cosine similarity between the user input and all questions
+    # Calculate cosine similarity
     cosine_similarities = cosine_similarity(vectors[-1:], vectors[:-1]).flatten()
     
     # Get the index of the most similar question
@@ -78,7 +75,7 @@ def get_fallback_response(user_input):
     # Return the corresponding answer
     return df['Answers'][index]
 
-# Main chatbot function combining ChatGPT and fallback method
+# Main chatbot function combining ChatGPT and fallback
 def chatbot(user_input):
     response = get_chatgpt_response(user_input)
     
@@ -88,13 +85,13 @@ def chatbot(user_input):
     
     return response
 
-# Streamlit UI for the chatbot
+# Streamlit UI
 st.title("Kepler College Chatbot")
 
-# Input text box for user to ask a question
+# User input text box
 user_input = st.text_input("Ask me anything about Kepler College:")
 
-# Display chatbot response when user submits a query
+# Display response when the user submits a query
 if user_input:
     response = chatbot(user_input)
     st.write(f"Chatbot: {response}")
