@@ -7,8 +7,8 @@ from nltk.tokenize import word_tokenize
 # Set the NLTK data path
 nltk.data.path.append('./.nltk_data')  # Ensure this path is included
 
-# Set your OpenAI API key securely
-openai.api_key = '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'
+# Directly set the OpenAI API key (use with caution)
+openai.api_key = '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'
 
 # Function to ensure the required NLTK resources are downloaded
 def ensure_nltk_resources():
@@ -18,6 +18,14 @@ def ensure_nltk_resources():
         st.write("Downloading 'punkt' tokenizer...")
         nltk.download('punkt', quiet=True)  # Download quietly
         st.success("Downloaded 'punkt' tokenizer.")
+    
+    # Check for punkt_tab specifically
+    try:
+        nltk.data.find('tokenizers/punkt_tab')
+    except LookupError:
+        st.write("Downloading 'punkt_tab' tokenizer...")
+        nltk.download('punkt_tab', quiet=True)  # Download quietly
+        st.success("Downloaded 'punkt_tab' tokenizer.")
 
 # Download required resources
 ensure_nltk_resources()
@@ -32,24 +40,19 @@ def preprocess_text(text):
         return []
 
 # Load your DataFrame
-@st.cache_data
-def load_data():
-    try:
-        df = pd.read_csv('Chatbot.csv')
-        if 'Questions' not in df.columns or 'Answers' not in df.columns:
-            st.error("The 'Questions' or 'Answers' column is missing in the dataset.")
-            return None
-        return df
-    except FileNotFoundError:
-        st.error("Chatbot.csv file not found. Please upload the file.")
-        return None
-    except Exception as e:
-        st.error(f"Error loading dataset: {str(e)}")
-        return None
+try:
+    df = pd.read_csv('Chatbot.csv')
+    if 'Questions' not in df.columns or 'Answers' not in df.columns:
+        st.error("The 'Questions' or 'Answers' column is missing in the dataset.")
+    else:
+        # Process the 'Questions' column
+        df['Processed_Questions'] = df['Questions'].apply(preprocess_text)
+except FileNotFoundError:
+    st.error("Chatbot.csv file not found. Please upload the file.")
+except Exception as e:
+    st.error(f"Error loading dataset: {str(e)}")
 
-df = load_data()
-
-# Function to get response from OpenAI
+# Function to get a response from the OpenAI API if needed
 def get_openai_response(question):
     try:
         response = openai.ChatCompletion.create(
@@ -60,21 +63,32 @@ def get_openai_response(question):
     except Exception as e:
         return f"Error: {str(e)}"
 
+# Function to check if the question is related to Kepler
+def is_kepler_related(question):
+    kepler_keywords = ['kepler', 'university', 'program', 'courses', 'admissions', 'tuition']
+    return any(keyword in question.lower() for keyword in kepler_keywords)
+
 # Streamlit chatbot interface
 st.title("Chatbot")
 user_input = st.text_input("You:", "")
 
-if user_input and df is not None:
+if user_input:
     # Preprocess user input
     processed_input = preprocess_text(user_input)
 
-    # Check for predefined responses in the DataFrame
-    response = df[df['Questions'].str.lower() == user_input.lower()]['Answers'].values
-
-    if len(response) > 0:
-        response = response[0]  # Get the first matching answer
+    # Check for predefined responses based on the processed input
+    matched_row = df[df['Processed_Questions'].apply(lambda x: set(x) == set(processed_input))]
+    
+    # Check if the question is related to Kepler
+    if is_kepler_related(user_input):
+        if not matched_row.empty:
+            # If a match is found in the DataFrame, get the corresponding answer
+            response = matched_row['Answers'].values[0]
+        else:
+            # If no predefined answer is found, respond with a fallback message
+            response = "I'm sorry, I couldn't find specific information about Kepler in my database."
     else:
-        # If no predefined answer is found, call OpenAI API
+        # If not related to Kepler, call OpenAI API for broader information
         response = get_openai_response(user_input)
 
     st.write(f"Chatbot: {response}")
