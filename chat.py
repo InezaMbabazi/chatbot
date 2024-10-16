@@ -7,9 +7,9 @@ import streamlit as st
 import openai
 
 # Set your OpenAI API key
-openai.api_key = "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"
+openai.api_key = "your_openai_api_key_here"
 
-# Append NLTK data path
+# Append NLTK data path (ensure correct path)
 nltk.data.path.append(os.path.join(os.getcwd(), '.nltk_data'))
 
 # Ensure necessary NLTK resources are downloaded
@@ -18,19 +18,18 @@ try:
 except LookupError:
     nltk.download('punkt', download_dir=os.path.join(os.getcwd(), '.nltk_data'))
 
-# Ensure stopwords are available
 try:
     nltk.data.find('corpora/stopwords')
 except LookupError:
     nltk.download('stopwords', download_dir=os.path.join(os.getcwd(), '.nltk_data'))
 
-# Load the dataset
+# Load the dataset (ensure the CSV is in the same folder as the script)
 df = pd.read_csv('Chatbot.csv')
 
-# Define a preprocessing function
+# Define a text preprocessing function
 def preprocess_text(text):
     # Tokenize the text
-    tokens = word_tokenize(text.lower())  
+    tokens = word_tokenize(text.lower())
     # Remove stopwords
     stop_words = set(stopwords.words('english'))
     tokens = [word for word in tokens if word.isalnum() and word not in stop_words]
@@ -39,7 +38,7 @@ def preprocess_text(text):
 # Preprocess the Questions column
 df['Processed_Questions'] = df['Questions'].apply(preprocess_text)
 
-# Streamlit application setup
+# Streamlit app setup
 st.title("Chatbot with NLTK and OpenAI")
 
 # Get user input
