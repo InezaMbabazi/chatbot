@@ -8,7 +8,7 @@ import streamlit as st
 nltk.data.path.append('./.nltk_data')
 
 # Set your OpenAI API key
-openai.api_key = 'your_api_key_here'  # Make sure to replace with your actual API key
+openai.api_key = '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'  # Make sure to replace with your actual API key
 
 # Function to ensure the required NLTK resources are downloaded
 def ensure_nltk_resources():
