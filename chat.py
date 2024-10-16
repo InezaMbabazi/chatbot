@@ -4,21 +4,17 @@ from nltk.tokenize import word_tokenize
 import streamlit as st
 
 # Set the NLTK data path
-nltk.data.path.append('./.nltk_data')  # Adjust this path if necessary
+nltk.data.path.append('./.nltk_data')  # Ensure this path is correct
 
 # Function to ensure the required NLTK resources are downloaded
 def ensure_nltk_resources():
-    try:
-        nltk.data.find('tokenizers/punkt')
-    except LookupError:
-        st.write("Downloading 'punkt' tokenizer...")
-        nltk.download('punkt')
-    
-    try:
-        nltk.data.find('tokenizers/punkt_tab')
-    except LookupError:
-        st.write("Downloading 'punkt_tab' tokenizer...")
-        nltk.download('punkt_tab')
+    resources = ['punkt', 'punkt_tab']
+    for resource in resources:
+        try:
+            nltk.data.find(f'tokenizers/{resource}')
+        except LookupError:
+            st.write(f"Downloading '{resource}' tokenizer...")
+            nltk.download(resource)
 
 # Download required resources
 ensure_nltk_resources()
@@ -33,16 +29,23 @@ def preprocess_text(text):
         st.write(f"Error in tokenizing text: {e}")
         return []
 
+# Set the title of the app
+st.title("Chatbot Questions Processing")
+
 # Load your DataFrame
-df = pd.read_csv('Chatbot.csv')
+try:
+    df = pd.read_csv('Chatbot.csv')
+except FileNotFoundError:
+    st.write("Error: 'Chatbot.csv' file not found.")
+    st.stop()
 
 # Check if 'Questions' column exists
 if 'Questions' in df.columns:
     # Process the 'Questions' column
     df['Processed_Questions'] = df['Questions'].apply(preprocess_text)
 
-    # Display the original and processed questions
-    st.write("Original and Processed Questions:")
+    # Display the original and processed questions with a section header
+    st.subheader("Original and Processed Questions:")
     st.dataframe(df[['Questions', 'Processed_Questions']].head())
 else:
     st.write("The 'Questions' column is not found in the DataFrame.")
