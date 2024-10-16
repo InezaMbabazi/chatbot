@@ -56,7 +56,7 @@ def get_chatgpt_response(user_input):
         )
         return response.choices[0].text.strip()
     except Exception as e:
-        return f"Error with ChatGPT: {e}"
+        return None  # Return None if there's an error
 
 # Fallback function for similarity-based matching
 def get_fallback_response(user_input):
@@ -77,12 +77,12 @@ def get_fallback_response(user_input):
 
 # Main chatbot function combining ChatGPT and fallback
 def chatbot(user_input):
+    # Get response from ChatGPT
     response = get_chatgpt_response(user_input)
     
-    # If ChatGPT response fails or is unsatisfactory, use fallback method
-    if response == "" or "Error" in response:
+    # If ChatGPT response is None or not satisfactory, use fallback method
+    if response is None or response.strip() == "":
         response = get_fallback_response(user_input)
-    
     return response
 
 # Streamlit UI
