@@ -7,7 +7,7 @@ import openai
 import streamlit as st
 
 # Set the path for NLTK data
-nltk.data.path.append('./nltk_data')
+nltk.data.path.append('./.nltk_data')
 
 # Load the dataset
 data_path = 'Chatbot.csv'
