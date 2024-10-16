@@ -6,12 +6,22 @@ import streamlit as st
 # Set the NLTK data path
 nltk.data.path.append('./.nltk_data')  # Adjust this path if necessary
 
-# Try to download the punkt tokenizer if it's not available
-try:
-    nltk.data.find('tokenizers/punkt')
-except LookupError:
-    st.write("Punkt tokenizer not found. Downloading...")
-    nltk.download('punkt')
+# Function to ensure the required NLTK resources are downloaded
+def ensure_nltk_resources():
+    try:
+        nltk.data.find('tokenizers/punkt')
+    except LookupError:
+        st.write("Downloading 'punkt' tokenizer...")
+        nltk.download('punkt')
+    
+    try:
+        nltk.data.find('tokenizers/punkt_tab')
+    except LookupError:
+        st.write("Downloading 'punkt_tab' tokenizer...")
+        nltk.download('punkt_tab')
+
+# Download required resources
+ensure_nltk_resources()
 
 # Function to preprocess text
 def preprocess_text(text):
