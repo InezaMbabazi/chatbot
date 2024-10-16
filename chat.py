@@ -8,7 +8,7 @@ from nltk.tokenize import word_tokenize
 nltk.data.path.append('./.nltk_data')
 
 # Directly set the OpenAI API key (use with caution)
-openai.api_key = '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'
+openai.api_key = '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'
 
 # Function to ensure the required NLTK resources are downloaded
 def ensure_nltk_resources():
