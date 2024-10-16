@@ -10,18 +10,19 @@ import openai
 openai.api_key = "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"
 
 # Append NLTK data path (ensure correct path)
-nltk.data.path.append(os.path.join(os.getcwd(), '.nltk_data'))
+nltk_data_path = os.path.join(os.getcwd(), '.nltk_data')
+nltk.data.path.append(nltk_data_path)
 
-# Ensure necessary NLTK resources are downloaded
+# Ensure necessary NLTK resources are downloaded or available
 try:
     nltk.data.find('tokenizers/punkt')
 except LookupError:
-    nltk.download('punkt', download_dir=os.path.join(os.getcwd(), '.nltk_data'))
+    nltk.download('punkt', download_dir=nltk_data_path)
 
 try:
     nltk.data.find('corpora/stopwords')
 except LookupError:
-    nltk.download('stopwords', download_dir=os.path.join(os.getcwd(), '.nltk_data'))
+    nltk.download('stopwords', download_dir=nltk_data_path)
 
 # Load the dataset (ensure the CSV is in the same folder as the script)
 df = pd.read_csv('Chatbot.csv')
