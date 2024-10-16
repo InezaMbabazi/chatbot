@@ -9,7 +9,7 @@ import os  # Import the os module to access environment variables
 nltk.data.path.append('./.nltk_data')  # Adjust this path if necessary
 
 # Set your OpenAI API key from environment variable
-openai.api_key = os.getenv('OPENAI_API_KEY')  # Get the API key from environment variable
+openai.api_key = st.secrets["OPENAI_API_KEY"]  # Access the secret
 
 # Function to ensure the required NLTK resources are downloaded
 def ensure_nltk_resources():
