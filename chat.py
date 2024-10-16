@@ -17,6 +17,11 @@ def ensure_nltk_resources():
     except LookupError:
         st.write("Downloading 'punkt' tokenizer...")
         nltk.download('punkt')
+    try:
+        nltk.data.find('tokenizers/punkt_tab')
+    except LookupError:
+        st.write("Downloading 'punkt_tab' tokenizer...")
+        nltk.download('punkt_tab')
 
 # Download required resources
 ensure_nltk_resources()
