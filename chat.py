@@ -63,10 +63,12 @@ def get_openai_response(question):
     except Exception as e:
         return f"Error: {str(e)}"
 
-# Function to check if the question is related to Kepler
-def is_kepler_related(question):
-    kepler_keywords = ['kepler', 'university', 'program', 'courses', 'admissions', 'tuition']
-    return any(keyword in question.lower() for keyword in kepler_keywords)
+# Function to check if the user's question matches any in the DataFrame
+def get_response_from_dataframe(user_input):
+    for index, row in df.iterrows():
+        if row['Questions'].lower() in user_input.lower():
+            return row['Answers']
+    return None
 
 # Streamlit chatbot interface
 st.title("Chatbot")
@@ -76,19 +78,13 @@ if user_input:
     # Preprocess user input
     processed_input = preprocess_text(user_input)
 
-    # Check for predefined responses based on the processed input
-    matched_row = df[df['Processed_Questions'].apply(lambda x: set(x) == set(processed_input))]
+    # Try to get a response from the DataFrame
+    response = get_response_from_dataframe(user_input)
     
-    # Check if the question is related to Kepler
-    if is_kepler_related(user_input):
-        if not matched_row.empty:
-            # If a match is found in the DataFrame, get the corresponding answer
-            response = matched_row['Answers'].values[0]
-        else:
-            # If no predefined answer is found, respond with a fallback message
-            response = "I'm sorry, I couldn't find specific information about Kepler in my database."
+    if response:
+        # If a match is found in the DataFrame, use the corresponding answer
+        st.write(f"Chatbot: {response}")
     else:
-        # If not related to Kepler, call OpenAI API for broader information
+        # If no predefined answer is found, call OpenAI API for broader information
         response = get_openai_response(user_input)
-
-    st.write(f"Chatbot: {response}")
+        st.write(f"Chatbot: {response}")
