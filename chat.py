@@ -3,11 +3,13 @@ import pandas as pd
 import streamlit as st
 import nltk
 from nltk.tokenize import word_tokenize
+from bs4 import BeautifulSoup  # For web scraping
+import requests
 
 # Set the NLTK data path
 nltk.data.path.append('./.nltk_data')
 
-# Directly set the OpenAI API key (use with caution)
+# Directly set the OpenAI API key (use environment variables in production)
 openai.api_key = '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'
 
 # Function to ensure the required NLTK resources are downloaded
@@ -66,8 +68,30 @@ def get_response_from_dataframe(user_input):
             return row['Answers']
     return None
 
+# (Optional) Function to scrape Kepler College website for live data
+def scrape_kepler_website(query):
+    try:
+        url = "https://www.keplercollege.ac.rw"  # Kepler's website
+        response = requests.get(url)
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        # Example: Scrape degree programs
+        if "degree" in query.lower():
+            degree_section = soup.find("section", {"id": "degrees-section"})  # Adjust this selector
+            if degree_section:
+                degree_info = degree_section.get_text()
+                return f"Kepler Degrees: {degree_info.strip()}"
+            else:
+                return "Could not find degree information on the Kepler website."
+
+        # Add more scraping logic here for other types of queries
+    except Exception as e:
+        return f"Error scraping website: {str(e)}"
+
+    return None
+
 # Streamlit chatbot interface
-st.title("Kepler Colleger Chatbot")
+st.title("Kepler College Chatbot")
 
 # Initialize a session state for conversation history
 if 'conversation' not in st.session_state:
@@ -87,9 +111,14 @@ if user_input:
         # If a match is found in the DataFrame, use the corresponding answer
         chatbot_response = response
     else:
-        # If no predefined answer is found, call OpenAI API for broader information
-        context = df.to_string(index=False)  # Create a context from the entire DataFrame
-        chatbot_response = get_openai_response(user_input, context)
+        # Scrape website for more info if OpenAI response fails
+        scraped_info = scrape_kepler_website(user_input)
+        if scraped_info:
+            chatbot_response = scraped_info
+        else:
+            # If no predefined answer or scraped data is found, call OpenAI API for broader information
+            context = df.to_string(index=False)  # Create a context from the entire DataFrame
+            chatbot_response = get_openai_response(user_input, context)
 
     # Add the conversation to session state
     st.session_state.conversation.append({"user": user_input, "chatbot": chatbot_response})
