@@ -10,7 +10,7 @@ import requests
 nltk.data.path.append('./.nltk_data')
 
 # Directly set the OpenAI API key (use environment variables in production)
-openai.api_key = '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'
+openai.api_key = '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'
 
 # Function to ensure the required NLTK resources are downloaded
 def ensure_nltk_resources():
