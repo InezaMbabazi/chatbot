@@ -1,85 +1,71 @@
-import streamlit as st
-import openai
-import nltk
-import numpy as np
 import pandas as pd
+import nltk
 from nltk.tokenize import word_tokenize
-from nltk.stem import WordNetLemmatizer
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+from nltk.corpus import wordnet
+import openai
+import random
 
-# Download NLTK resources (only needed the first time you run the app)
-nltk.download('punkt', quiet=True)  # quiet=True to suppress output
-nltk.download('wordnet', quiet=True)
-
-# Set up OpenAI API Key
-openai.api_key = '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'  # Replace with your actual OpenAI API key
-
-# Load the dataset from Desktop
-data_path ='Chatbot.csv'  # Update this path
-
+# Load your dataset
+data_path = 'Chatbot.csv'  # Use the relative path to your CSV file
 df = pd.read_csv(data_path)
 
-# Preprocess text
-lemmatizer = WordNetLemmatizer()
+# Ensure you have downloaded the required NLTK data files
+# nltk.download('punkt')
+# nltk.download('wordnet')
 
+# Initialize OpenAI API key
+openai.api_key = "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"  # Replace with your OpenAI API key
+
+# Process text function
 def preprocess_text(text):
-    tokens = word_tokenize(text.lower())
-    lemmatized = [lemmatizer.lemmatize(token) for token in tokens]
-    return ' '.join(lemmatized)
+    tokens = word_tokenize(text.lower())  # Tokenize text
+    return tokens
 
-# Apply preprocessing to questions
+# Preprocess the questions
 df['Processed_Questions'] = df['Questions'].apply(preprocess_text)
 
-# Function to get response from OpenAI (ChatGPT)
+# Function to get a response from ChatGPT
 def get_chatgpt_response(user_input):
     try:
-        response = openai.Completion.create(
-            engine="text-davinci-003",  # You can also use other engines like "gpt-3.5-turbo"
-            prompt=user_input,
-            max_tokens=150,
-            n=1,
-            stop=None,
-            temperature=0.7
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",  # or another model if preferred
+            messages=[
+                {"role": "user", "content": user_input}
+            ]
         )
-        return response.choices[0].text.strip()
+        return response.choices[0].message['content']
     except Exception as e:
-        return f"Error with ChatGPT: {e}"
+        return str(e)
 
-# Fallback function for similarity-based matching
-def get_fallback_response(user_input):
-    user_input_processed = preprocess_text(user_input)
-    
-    # Create TF-IDF vectors
-    vectorizer = TfidfVectorizer().fit_transform(df['Processed_Questions'].tolist() + [user_input_processed])
-    vectors = vectorizer.toarray()
+# Function to find the best match
+def find_best_match(user_input):
+    user_tokens = preprocess_text(user_input)
+    for index, row in df.iterrows():
+        question_tokens = row['Processed_Questions']
+        # Simple matching logic (you can improve this)
+        if any(token in question_tokens for token in user_tokens):
+            return row['Answers']  # Return the corresponding answer
+    return None  # If no match found
 
-    # Calculate cosine similarity
-    cosine_similarities = cosine_similarity(vectors[-1:], vectors[:-1]).flatten()
-    
-    # Get the index of the most similar question
-    index = np.argmax(cosine_similarities)
-    
-    # Return the corresponding answer
-    return df['Answers'][index]
+# Streamlit interface
+import streamlit as st
 
-# Main chatbot function combining ChatGPT and fallback
-def chatbot(user_input):
-    response = get_chatgpt_response(user_input)
-    
-    # If ChatGPT response fails or is unsatisfactory, use fallback method
-    if response == "" or "Error" in response:
-        response = get_fallback_response(user_input)
-    
-    return response
+st.title("Chatbot")
+st.write("Ask me anything!")
 
-# Streamlit UI
-st.title("Kepler College Chatbot")
+user_input = st.text_input("Your question:")
 
-# User input text box
-user_input = st.text_input("Ask me anything about Kepler College:")
+if st.button("Submit"):
+    if user_input:
+        # Try to find an answer in the dataset
+        answer = find_best_match(user_input)
+        if answer:
+            st.write(f"Bot: {answer}")
+        else:
+            # If no answer found, fallback to ChatGPT
+            st.write("Bot: I don't have an answer for that. Let me check with ChatGPT.")
+            chatgpt_answer = get_chatgpt_response(user_input)
+            st.write(f"ChatGPT: {chatgpt_answer}")
+    else:
+        st.write("Please enter a question.")
 
-# Display response when the user submits a query
-if user_input:
-    response = chatbot(user_input)
-    st.write(f"Chatbot: {response}")
