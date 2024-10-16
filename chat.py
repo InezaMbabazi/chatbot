@@ -18,14 +18,6 @@ def ensure_nltk_resources():
         st.write("Downloading 'punkt' tokenizer...")
         nltk.download('punkt', quiet=True)  # Download quietly
         st.success("Downloaded 'punkt' tokenizer.")
-    
-    # Check for punkt_tab specifically
-    try:
-        nltk.data.find('tokenizers/punkt_tab')
-    except LookupError:
-        st.write("Downloading 'punkt_tab' tokenizer...")
-        nltk.download('punkt_tab', quiet=True)  # Download quietly
-        st.success("Downloaded 'punkt_tab' tokenizer.")
 
 # Download required resources
 ensure_nltk_resources()
@@ -53,11 +45,14 @@ except Exception as e:
     st.error(f"Error loading dataset: {str(e)}")
 
 # Function to get a response from the OpenAI API if needed
-def get_openai_response(question):
+def get_openai_response(question, context):
     try:
         response = openai.ChatCompletion.create(
             model='gpt-3.5-turbo',
-            messages=[{"role": "user", "content": question}]
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": f"{question}\n\nContext: {context}"}
+            ]
         )
         return response['choices'][0]['message']['content']
     except Exception as e:
@@ -66,6 +61,7 @@ def get_openai_response(question):
 # Function to check if the user's question matches any in the DataFrame
 def get_response_from_dataframe(user_input):
     for index, row in df.iterrows():
+        # Check if any part of the question contains the keywords from the DataFrame
         if row['Questions'].lower() in user_input.lower():
             return row['Answers']
     return None
@@ -80,11 +76,13 @@ if user_input:
 
     # Try to get a response from the DataFrame
     response = get_response_from_dataframe(user_input)
-    
+
     if response:
         # If a match is found in the DataFrame, use the corresponding answer
         st.write(f"Chatbot: {response}")
     else:
         # If no predefined answer is found, call OpenAI API for broader information
-        response = get_openai_response(user_input)
+        # Additionally, provide context from the DataFrame
+        context = df.to_string(index=False)  # Create a context from the entire DataFrame
+        response = get_openai_response(user_input, context)
         st.write(f"Chatbot: {response}")
