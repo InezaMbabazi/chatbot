@@ -16,7 +16,7 @@ nltk.download('wordnet', quiet=True)
 openai.api_key = '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'  # Replace with your actual OpenAI API key
 
 # Load the dataset from Desktop
-data_path = 'C:/Users/COMPUTER/Desktop/Chatbot.csv'  # Update this path
+data_path = 'Chatbot.csv'  # Update this path
 
 df = pd.read_csv(data_path)
 
