@@ -10,6 +10,7 @@ nltk.data.path.append('./.nltk_data')
 # Function to check if NLTK resources are available
 def check_nltk_resources():
     try:
+        # Check for the standard punkt tokenizer
         nltk.data.find('tokenizers/punkt')
         st.success("NLTK 'punkt' tokenizer is available.")
     except LookupError:
@@ -24,6 +25,7 @@ openai.api_key = st.secrets["openai"]["api_key"]
 # Function to preprocess text
 def preprocess_text(text):
     try:
+        # Use only the standard punkt tokenizer
         tokens = word_tokenize(text.lower())
         return tokens
     except Exception as e:
