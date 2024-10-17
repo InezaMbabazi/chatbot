@@ -4,16 +4,18 @@ import streamlit as st
 import nltk
 from nltk.tokenize import word_tokenize
 
-# Set the NLTK data path
-nltk.data.path.append('./.nltk_data')
+# Set the NLTK data path to include your local data
+nltk.data.path.append('./.nltk_data')  # Ensure this matches your directory structure
 
-# Download required resources
-try:
-    nltk.data.find('tokenizers/punkt')
-except LookupError:
-    st.write("Downloading 'punkt' tokenizer...")
-    nltk.download('punkt', quiet=True)  # Ensure 'punkt' is downloaded
-    st.success("Downloaded 'punkt' tokenizer.")
+# Function to check if 'punkt' is available locally
+def check_nltk_resources():
+    try:
+        nltk.data.find('tokenizers/punkt')
+    except LookupError:
+        st.error("NLTK punkt tokenizer not found locally. Please ensure it is included in your project.")
+
+# Call the function to check resources
+check_nltk_resources()
 
 # Set OpenAI API key
 openai.api_key = st.secrets["openai"]["api_key"]
