@@ -1,5 +1,5 @@
-import openai
 import pandas as pd
+import openai
 import streamlit as st
 import nltk
 from nltk.tokenize import word_tokenize
@@ -7,8 +7,8 @@ from nltk.tokenize import word_tokenize
 # Set the NLTK data path
 nltk.data.path.append('./.nltk_data')
 
-# Directly set the OpenAI API key (use with caution)
-openai.api_key = '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'
+# Get the OpenAI API key from Streamlit secrets
+openai.api_key = st.secrets["openai"]["api_key"]
 
 # Function to ensure the required NLTK resources are downloaded
 def ensure_nltk_resources():
@@ -67,7 +67,7 @@ def get_response_from_dataframe(user_input):
     return None
 
 # Streamlit chatbot interface
-st.title("Kepler Colleger Chatbot")
+st.title("Kepler College Chatbot")
 
 # Initialize a session state for conversation history
 if 'conversation' not in st.session_state:
