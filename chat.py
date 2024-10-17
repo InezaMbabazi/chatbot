@@ -13,7 +13,7 @@ openai.api_key = st.secrets["openai"]["api_key"]  # Use the secret from Streamli
 # Function to ensure the required NLTK resources are downloaded
 def ensure_nltk_resources():
     try:
-        nltk.data.find('tokenizers/punkt')
+        nltk.data.find('tokenizers/punkt')  # Check for punkt tokenizer
     except LookupError:
         st.write("Downloading 'punkt' tokenizer...")
         nltk.download('punkt', quiet=True)  # Correctly download 'punkt' resource
