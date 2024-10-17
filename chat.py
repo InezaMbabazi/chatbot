@@ -4,15 +4,16 @@ import streamlit as st
 import nltk
 from nltk.tokenize import word_tokenize
 
-# Set the NLTK data path to include your local data
-nltk.data.path.append('./.nltk_data')  # Ensure this matches your directory structure
+# Set the NLTK data path to the local .nltk_data directory
+nltk.data.path.append('./.nltk_data')
 
-# Function to check if 'punkt' is available locally
+# Function to check if NLTK resources are available
 def check_nltk_resources():
     try:
         nltk.data.find('tokenizers/punkt')
+        st.success("NLTK 'punkt' tokenizer is available.")
     except LookupError:
-        st.error("NLTK punkt tokenizer not found locally. Please ensure it is included in your project.")
+        st.error("NLTK 'punkt' tokenizer not found. Please ensure it's available in the .nltk_data directory.")
 
 # Call the function to check resources
 check_nltk_resources()
