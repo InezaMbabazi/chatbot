@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import openai
 import streamlit as st
@@ -7,7 +8,7 @@ from nltk.tokenize import word_tokenize
 # Set the NLTK data path
 nltk.data.path.append('./.nltk_data')
 
-# Get the OpenAI API key from Streamlit secrets
+# Get OpenAI API key from Streamlit secrets
 openai.api_key = st.secrets["openai"]["api_key"]
 
 # Function to ensure the required NLTK resources are downloaded
