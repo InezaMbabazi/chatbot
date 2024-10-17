@@ -1,15 +1,15 @@
-import os
-import pandas as pd
 import openai
+import pandas as pd
 import streamlit as st
 import nltk
 from nltk.tokenize import word_tokenize
+import os
 
-# Ensure NLTK data path is correctly set
+# Set the NLTK data path
 nltk.data.path.append('./.nltk_data')
 
-# Set OpenAI API key from Streamlit secrets
-openai.api_key = st.secrets["openai"]["api_key"]
+# Retrieve the OpenAI API key from environment variables
+openai.api_key = os.getenv('OPENAI_API_KEY')  # Set this in Streamlit Cloud settings
 
 # Function to ensure the required NLTK resources are downloaded
 def ensure_nltk_resources():
