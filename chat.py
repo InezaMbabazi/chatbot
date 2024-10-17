@@ -8,7 +8,7 @@ from nltk.tokenize import word_tokenize
 nltk.data.path.append('./.nltk_data')
 
 # Directly set the OpenAI API key (use with caution)
-openai.api_key = st.secrets["openai"]["api_key"]    # Use the secret from Streamlit Cloud
+openai.api_key = st.secrets["openai"]["api_key"]  # Use the secret from Streamlit Cloud
 
 # Function to ensure the required NLTK resources are downloaded
 def ensure_nltk_resources():
