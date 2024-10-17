@@ -1,5 +1,5 @@
 streamlit
-nltk
+nltk==3.6.3
 openai==0.28
 pandas
 numpy
