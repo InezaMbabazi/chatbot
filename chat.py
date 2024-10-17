@@ -3,13 +3,12 @@ import pandas as pd
 import streamlit as st
 import nltk
 from nltk.tokenize import word_tokenize
-import os
 
 # Set the NLTK data path
 nltk.data.path.append('./.nltk_data')
 
-# Retrieve the OpenAI API key from environment variables
-openai.api_key = os.getenv('OPENAI_API_KEY')  # Set this in Streamlit Cloud settings
+# Directly set the OpenAI API key (use with caution)
+openai.api_key = st.secrets["openai_api_key"]  # Use the secret from Streamlit Cloud
 
 # Function to ensure the required NLTK resources are downloaded
 def ensure_nltk_resources():
@@ -17,7 +16,7 @@ def ensure_nltk_resources():
         nltk.data.find('tokenizers/punkt')
     except LookupError:
         st.write("Downloading 'punkt' tokenizer...")
-        nltk.download('punkt', quiet=True)  # Download quietly
+        nltk.download('punkt', quiet=True)  # Download the correct punkt resource
         st.success("Downloaded 'punkt' tokenizer.")
 
 # Download required resources
