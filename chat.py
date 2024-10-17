@@ -16,7 +16,7 @@ def ensure_nltk_resources():
         nltk.data.find('tokenizers/punkt')
     except LookupError:
         st.write("Downloading 'punkt' tokenizer...")
-        nltk.download('punkt', quiet=True)  # Download the correct punkt resource
+        nltk.download('punkt', quiet=True)  # Correctly download 'punkt' resource
         st.success("Downloaded 'punkt' tokenizer.")
 
 # Download required resources
