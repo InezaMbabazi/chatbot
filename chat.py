@@ -83,7 +83,7 @@ st.markdown("""
         <ul style="list-style-type: square;">
             <li>Type a question or message in the input field below.</li>
             <li>If your question matches one in the database, you'll receive the predefined answer.</li>
-            <li>If no match is found, the chatbot will generate a response based on the provided context.</li>
+          
         </ul>
         <p>Engage with the chatbot for a smarter learning experience!</p>
     </div>
