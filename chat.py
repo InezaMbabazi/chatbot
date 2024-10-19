@@ -65,8 +65,36 @@ def get_response_from_dataframe(user_input):
             return row['Answers']
     return None
 
-# Streamlit chatbot interface
+# Streamlit UI with header image and instructions
+st.image("header.png", use_column_width=True)  # Add your header image file here
 st.title("Kepler College Chatbot")
+
+# Instructions with better formatting
+st.markdown("""
+    <div style="background-color: #f0f0f5; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+        <h3 style="color: #2E86C1;">Welcome to Kepler College's AI-Powered Chatbot</h3>
+        <p>To interact with this AI assistant, you can:</p>
+        <ul style="list-style-type: square;">
+            <li>Type a question or message in the input field below.</li>
+            <li>If your question matches one in the database, you'll receive the predefined answer.</li>
+            <li>If no match is found, the chatbot will generate a response based on the provided context.</li>
+        </ul>
+        <p>Engage with the chatbot for a smarter learning experience!</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+# Apply custom CSS for layout styling
+st.markdown("""
+    <style>
+    .chatbox {
+        border: 2px solid #2196F3;
+        padding: 10px;
+        height: 200px;
+        overflow-y: scroll;
+        background-color: #f1f1f1;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
 # Initialize a session state for conversation history
 if 'conversation' not in st.session_state:
@@ -95,6 +123,6 @@ if user_input:
 
 # Display the last 3 conversations with new messages on top
 if st.session_state.conversation:
+    st.markdown("<h4>Conversation History:</h4>", unsafe_allow_html=True)
     for chat in reversed(st.session_state.conversation):
-        st.write(f"You: {chat['user']}")
-        st.write(f"Chatbot: {chat['chatbot']}")
+        st.markdown(f"<div class='chatbox'><strong>You:</strong> {chat['user']}<br><strong>Chatbot:</strong> {chat['chatbot']}</div>", unsafe_allow_html=True)
