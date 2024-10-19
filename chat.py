@@ -3,6 +3,7 @@ import pandas as pd
 import streamlit as st
 import nltk
 from nltk.tokenize import word_tokenize
+import os
 
 # Set the NLTK data path to the local .nltk_data directory
 nltk.data.path.append('./.nltk_data')
@@ -66,10 +67,15 @@ def get_response_from_dataframe(user_input):
     return None
 
 # Streamlit UI with header image and instructions
-st.image("header.png", use_column_width=True)  # Add your header image file here
+header_image_path = "header.png"  # Ensure this image exists in your working directory
+if os.path.exists(header_image_path):
+    st.image(header_image_path, use_column_width=True)
+else:
+    st.warning("Header image not found. Please upload 'header_image.png'.")
+
+# Add chatbot title and instructions
 st.title("Kepler College Chatbot")
 
-# Instructions with better formatting
 st.markdown("""
     <div style="background-color: #f0f0f5; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
         <h3 style="color: #2E86C1;">Welcome to Kepler College's AI-Powered Chatbot</h3>
