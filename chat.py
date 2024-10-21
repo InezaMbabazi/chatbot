@@ -83,8 +83,7 @@ st.markdown("""
         <ul style="list-style-type: square;">
             <li>Type a question or message in the input field below.</li>
             <li>If your question matches one in the database, you'll receive the predefined answer.</li>
-          
-        </ul>
+         
        
     </div>
     """, unsafe_allow_html=True)
