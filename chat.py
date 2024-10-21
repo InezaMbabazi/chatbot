@@ -85,7 +85,7 @@ st.markdown("""
             <li>If your question matches one in the database, you'll receive the predefined answer.</li>
           
         </ul>
-        <p>Engage with the chatbot for a smarter learning experience!</p>
+       
     </div>
     """, unsafe_allow_html=True)
 
