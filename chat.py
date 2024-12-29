@@ -42,9 +42,13 @@ def fetch_website_content(url):
         response = requests.get(url)
         soup = BeautifulSoup(response.content, 'html.parser')
 
-        # Extract all text from the website
+        # Extract all text from the website (we can refine this based on the structure)
         paragraphs = soup.find_all('p')
         website_text = " ".join([para.get_text() for para in paragraphs])
+
+        # Optionally, include headers or other sections that might provide important context
+        headers = soup.find_all(['h1', 'h2', 'h3', 'h4'])
+        website_text += " ".join([header.get_text() for header in headers])
 
         return website_text
     except requests.exceptions.RequestException as e:
@@ -55,38 +59,49 @@ def fetch_website_content(url):
 website_url = "https://keplercollege.ac.rw/"  # Replace with your website URL
 website_content = fetch_website_content(website_url)
 
-# Load the chatbot database (ensure you have this dataset loaded into a DataFrame)
-# The database is called 'Chatbot with Questions and Answers' containing 'Questions' and 'Answers'
-@st.cache
-def load_chatbot_database():
-    # Example path, replace with actual CSV file path or data source
-    chatbot_df = pd.read_csv("chatbot_with_questions_and_answers.csv")
-    return chatbot_df
-
-chatbot_df = load_chatbot_database()
-
-# Function to match user input with the 'Chatbot with Questions and Answers' database
-def get_database_info(user_input, chatbot_df):
-    # Try to find the closest match for the user's input in the 'Questions' column
-    for index, row in chatbot_df.iterrows():
-        if user_input.lower() in row['Questions'].lower():
-            return row['Answers']
-    return None  # Return None if no match is found
-
-# Function to get a response from OpenAI API
+# Function to get a response from OpenAI API using the website content
 def get_openai_response(question, context):
     try:
         response = openai.ChatCompletion.create(
             model='gpt-3.5-turbo',
-            messages=[{
-                "role": "system", "content": "You are a helpful assistant."
-            }, {
-                "role": "user", "content": f"{question}\n\nContext: {context}"
-            }]
+            messages=[{"role": "system", "content": "You are a helpful assistant."},
+                      {"role": "user", "content": f"{question}\n\nContext: {context}"}]
         )
         return response['choices'][0]['message']['content']
     except Exception as e:
         return f"Error: {str(e)}"
+
+# Function to get information from the chatbot database (for fallback)
+def get_database_info(query, df):
+    # Preprocess the user input query
+    query_tokens = preprocess_text(query)
+    
+    # Iterate through the database and search for matching questions
+    for index, row in df.iterrows():
+        # Preprocess each question in the database
+        db_question_tokens = preprocess_text(row['Question'])
+        
+        # Check for token overlap (simple keyword matching for demonstration)
+        if any(token in db_question_tokens for token in query_tokens):
+            return row['Answer']  # Return the matching answer
+    
+    return "Sorry, I could not find an answer in the database."
+
+# Load the Chatbot database (replace this with actual database loading logic)
+# For example, loading it from a CSV or database.
+# Assuming the dataframe has columns 'Question' and 'Answer'
+# Replace with your actual database query to load this data
+chatbot_data = {
+    'Question': ['What is Kepler College?', 'How do I apply?', 'What programs are offered?'],
+    'Answer': [
+        "Kepler College is a dynamic institution providing quality education in various fields.",
+        "To apply, visit our website and fill out the online application form.",
+        "Kepler College offers programs in various disciplines, including Business, IT, and Education."
+    ]
+}
+
+# Convert the example database into a pandas DataFrame
+chatbot_df = pd.DataFrame(chatbot_data)
 
 # Streamlit UI with header image and instructions
 header_image_path = "header.png"  # Ensure this image exists in your working directory
@@ -107,7 +122,20 @@ st.markdown("""
             <li>The chatbot will respond based on the website's content and knowledge base.</li>
         </ul>
     </div>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
+
+# Apply custom CSS for layout styling
+st.markdown("""
+    <style>
+    .chatbox {
+        border: 2px solid #2196F3;
+        padding: 10px;
+        height: 200px;
+        overflow-y: scroll;
+        background-color: #f1f1f1;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
 # Initialize a session state for conversation history
 if 'conversation' not in st.session_state:
@@ -126,7 +154,7 @@ def handle_user_input():
         chatbot_response = get_database_info(user_input, chatbot_df)
 
         # If no useful answer from the database, fallback to the website content
-        if not chatbot_response:
+        if "Sorry" in chatbot_response:
             chatbot_response = get_openai_response(user_input, website_content)
 
         # Add the conversation to session state
@@ -138,7 +166,7 @@ def handle_user_input():
 # User input field with the updated functionality for Enter key
 user_input = st.text_input("You:", value=st.session_state.input_text, key="input_text", on_change=handle_user_input)
 
-# Display the conversation history
+# Display the last 3 conversations with new messages on top
 if st.session_state.conversation:
     st.markdown("<h4>Conversation History:</h4>", unsafe_allow_html=True)
     for chat in reversed(st.session_state.conversation[-3:]):
