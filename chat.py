@@ -52,11 +52,16 @@ def fetch_website_content(url):
         st.error(f"Error fetching website content: {str(e)}")
         return ""
 
-# Load website content (you can replace this URL with your website's URL)
-website_url = "https://keplercollege.ac.rw/"  # Replace with your website URL
-website_content = fetch_website_content(website_url)
+# Load the Chatbot CSV data (assuming it's in the same directory as the script)
+def load_chatbot_data():
+    try:
+        chatbot_df = pd.read_csv('Chatbot.csv')  # File in the same directory
+        return chatbot_df
+    except FileNotFoundError:
+        st.error("Chatbot.csv file not found. Please ensure the file is in the same directory as this script.")
+        return pd.DataFrame()
 
-# Function to get a response from OpenAI API
+# Function to get a response from the OpenAI API
 def get_openai_response(question, context):
     try:
         response = openai.ChatCompletion.create(
@@ -69,6 +74,31 @@ def get_openai_response(question, context):
         return response['choices'][0]['message']['content']
     except Exception as e:
         return f"Error: {str(e)}"
+
+# Combine website content and chatbot CSV data
+def combine_data(website_content, chatbot_df):
+    # Concatenate the website content with CSV data (text from all rows in 'Questions' and 'Answers' columns)
+    chatbot_content = " ".join(chatbot_df['Answers'].dropna())  # Concatenate all answers
+    combined_content = website_content + " " + chatbot_content  # Combine both contents
+    return combined_content
+
+# Function to check if a question matches any in the chatbot CSV data
+def find_answer_in_csv(question, chatbot_df):
+    # Try to find a matching answer in the CSV
+    for _, row in chatbot_df.iterrows():
+        if question.lower() in row['Questions'].lower():
+            return row['Answers']
+    return None
+
+# Load chatbot data
+chatbot_data = load_chatbot_data()
+
+# Load website content (you can replace this URL with your website's URL)
+website_url = "https://keplercollege.ac.rw/"  # Replace with your website URL
+website_content = fetch_website_content(website_url)
+
+# Combine website and CSV content
+combined_content = combine_data(website_content, chatbot_data)
 
 # Streamlit UI with header image and instructions
 header_image_path = "header.png"  # Ensure this image exists in your working directory
@@ -117,8 +147,14 @@ def handle_user_input():
     user_input = st.session_state.input_text.strip()  # Get the input text
 
     if user_input != "":
-        # Get response from the website content using OpenAI API
-        chatbot_response = get_openai_response(user_input, website_content)
+        # First check the CSV data for a matching answer
+        answer_from_csv = find_answer_in_csv(user_input, chatbot_data)
+
+        if answer_from_csv:
+            chatbot_response = answer_from_csv
+        else:
+            # If no answer in the CSV, fetch a response using website content
+            chatbot_response = get_openai_response(user_input, combined_content)
 
         # Add the conversation to session state
         st.session_state.conversation.append({"user": user_input, "chatbot": chatbot_response})
