@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 import nltk
 from nltk.tokenize import word_tokenize
 
-# Set the NLTK data path to the local .nltk_data directory
+# Set NLTK data path to the local .nltk_data directory
 nltk.data.path.append('./.nltk_data')
 
 # Function to check if NLTK resources are available
@@ -28,7 +28,7 @@ openai.api_key = st.secrets["openai"]["api_key"]
 # Function to preprocess text
 def preprocess_text(text):
     try:
-        # Use only the standard punkt tokenizer
+        # Tokenize using NLTK (for simple NLP tasks)
         tokens = word_tokenize(text.lower())
         return tokens
     except Exception as e:
@@ -55,7 +55,7 @@ def fetch_website_content(url):
         st.error(f"Error fetching website content: {str(e)}")
         return ""
 
-# Load website content (you can replace this URL with your website's URL)
+# Load website content (replace this URL with your actual website URL)
 website_url = "https://keplercollege.ac.rw/"  # Replace with your website URL
 website_content = fetch_website_content(website_url)
 
@@ -71,23 +71,40 @@ def get_openai_response(question, context):
     except Exception as e:
         return f"Error: {str(e)}"
 
-# Function to get information from the chatbot database (for fallback)
-def get_database_info(query, df):
-    # Search for matching entries in the DataFrame (e.g., by the column 'question')
-    matches = df[df['question'].str.contains(query, case=False, na=False)]
-    if not matches.empty:
-        return matches.iloc[0]['answer']  # Return the first matching answer
+# Function to get specific information based on curriculum details from the website
+def get_course_info_by_year(year, content):
+    # Example pattern to extract Year 1 curriculum from website content
+    if 'Year 1' in content:
+        year_1_data = """
+        Year 1:
+        In their first year in the program, students delve into the fundamental principles of project management. Topics include project scope and design, project management information systems, principles of management, and the fundamentals of project management. Emphasis is placed on building a strong theoretical foundation that serves as the cornerstone for more advanced concepts in subsequent years, and on technology, critical thinking, and problem-solving skills.
+
+        Courses:
+        Trimester 1:
+        - ENG6101 | English Communication Skills 1: Fundamentals of Grammar and Reading | 20 Credits
+        - ETH6101 | Critical Thinking and Ethical Problem Solving | 10 Credits
+        - TEC6101 | Computer Applications 1: Microsoft Word and Google Suite | 10 Credits
+        - PCO6101 | Professional Foundations | 10 Credits
+
+        Trimester 2:
+        - ENG6202 | English Communication Skills 2: Academic Writing | 10 Credits
+        - MTH6201 | Business Mathematics | 10 Credits
+        - TEC6202 | Computer Applications 2: Microsoft Excel and Powerpoint | 10 Credits
+        - MGT6201 | Principles of Management | 10 Credits
+        - PRM6201 | Fundamentals of Project Management | 15 Credits
+        """
+        return year_1_data
     else:
-        return "Sorry, I could not find an answer in the database."
+        return "Sorry, I could not find detailed information for that year."
 
 # Example chatbot database (replace with your actual data)
-# Make sure your chatbot database contains columns like 'question' and 'answer'
 chatbot_data = {
-    'question': ['What is Kepler College?', 'How do I apply?', 'What programs are offered?'],
+    'question': ['What is Kepler College?', 'How do I apply?', 'What programs are offered?', 'What do we learn in Year 1 of Project Management?'],
     'answer': [
         "Kepler College is a dynamic institution providing quality education in various fields.",
         "To apply, visit our website and fill out the online application form.",
-        "Kepler College offers programs in various disciplines, including Business, IT, and Education."
+        "Kepler College offers programs in various disciplines, including Business, IT, and Education.",
+        get_course_info_by_year(1, website_content)  # Year 1 Project Management curriculum
     ]
 }
 
@@ -113,19 +130,6 @@ st.markdown("""
             <li>The chatbot will respond based on the website's content and knowledge base.</li>
         </ul>
     </div>
-    """, unsafe_allow_html=True)
-
-# Apply custom CSS for layout styling
-st.markdown("""
-    <style>
-    .chatbox {
-        border: 2px solid #2196F3;
-        padding: 10px;
-        height: 200px;
-        overflow-y: scroll;
-        background-color: #f1f1f1;
-    }
-    </style>
     """, unsafe_allow_html=True)
 
 # Initialize a session state for conversation history
