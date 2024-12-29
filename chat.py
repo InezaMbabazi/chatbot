@@ -55,10 +55,6 @@ def fetch_website_content(url):
         st.error(f"Error fetching website content: {str(e)}")
         return ""
 
-# Load website content (you can replace this URL with your website's URL)
-website_url = "https://keplercollege.ac.rw/"  # Replace with your website URL
-website_content = fetch_website_content(website_url)
-
 # Function to get a response from OpenAI API using the website content
 def get_openai_response(question, context):
     try:
@@ -87,21 +83,24 @@ def get_database_info(query, df):
     
     return "Sorry, I could not find an answer in the database."
 
-# Load the Chatbot database (replace this with actual database loading logic)
-# For example, loading it from a CSV or database.
-# Assuming the dataframe has columns 'Question' and 'Answer'
-# Replace with your actual database query to load this data
-chatbot_data = {
-    'Question': ['What is Kepler College?', 'How do I apply?', 'What programs are offered?'],
-    'Answer': [
-        "Kepler College is a dynamic institution providing quality education in various fields.",
-        "To apply, visit our website and fill out the online application form.",
-        "Kepler College offers programs in various disciplines, including Business, IT, and Education."
-    ]
-}
+# Load the Chatbot database (Chatbot.csv file)
+def load_chatbot_data(file_path):
+    try:
+        # Read the CSV file into a pandas DataFrame
+        df = pd.read_csv(file_path)
+        
+        # Check if the expected columns ('Question', 'Answer') exist
+        if 'Question' not in df.columns or 'Answer' not in df.columns:
+            st.error("The CSV file must contain 'Question' and 'Answer' columns.")
+            return pd.DataFrame()  # Return an empty DataFrame in case of error
+        
+        return df
+    except Exception as e:
+        st.error(f"Error loading CSV file: {str(e)}")
+        return pd.DataFrame()
 
-# Convert the example database into a pandas DataFrame
-chatbot_df = pd.DataFrame(chatbot_data)
+# Load the chatbot data from Chatbot.csv
+chatbot_df = load_chatbot_data('Chatbot.csv')  # Assuming the file is in the same directory as the script
 
 # Streamlit UI with header image and instructions
 header_image_path = "header.png"  # Ensure this image exists in your working directory
@@ -155,6 +154,8 @@ def handle_user_input():
 
         # If no useful answer from the database, fallback to the website content
         if "Sorry" in chatbot_response:
+            # In a real scenario, we would fetch content from a website, here we skip that step for simplicity
+            website_content = "Content from the website can be fetched here."
             chatbot_response = get_openai_response(user_input, website_content)
 
         # Add the conversation to session state
