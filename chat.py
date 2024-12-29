@@ -109,7 +109,7 @@ st.markdown("""
         <h3 style="color: #2E86C1;">Welcome to Kepler College's AI-Powered Chatbot</h3>
         <p>To interact with this AI assistant, you can:</p>
         <ul style="list-style-type: square;">
-            <li>Type a question or message in the input field below.</li>
+            <li>Type a question or message in the input field below and press Enter.</li>
             <li>If your question matches one in the database, you'll receive the predefined answer.</li>
             <li>If the question is not found, the assistant will fetch relevant information from the website.</li>
         </ul>
@@ -140,7 +140,7 @@ if 'input_text' not in st.session_state:
 # User input with a unique key for session state
 user_input = st.text_input("You:", value=st.session_state.input_text, key="input_text")
 
-# Handle input submission
+# Handle input submission by detecting the user pressing Enter (value change)
 if user_input.strip() != "":
     # Try to get a response from the DataFrame
     response = get_response_from_dataframe(user_input)
