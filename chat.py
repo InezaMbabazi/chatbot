@@ -13,7 +13,6 @@ nltk.data.path.append('./.nltk_data')
 # Function to check if NLTK resources are available
 def check_nltk_resources():
     try:
-        # Check for the standard punkt tokenizer
         nltk.data.find('tokenizers/punkt')
         st.success("NLTK 'punkt' tokenizer is available.")
     except LookupError:
@@ -28,7 +27,6 @@ openai.api_key = st.secrets["openai"]["api_key"]
 # Function to preprocess text
 def preprocess_text(text):
     try:
-        # Use only the standard punkt tokenizer
         tokens = word_tokenize(text.lower())
         return tokens
     except Exception as e:
@@ -43,7 +41,6 @@ def fetch_website_content(url):
         soup = BeautifulSoup(response.content, 'html.parser')
 
         # Extract all text from the website
-        # You can customize this part to extract specific content such as paragraphs, headings, etc.
         paragraphs = soup.find_all('p')
         website_text = " ".join([para.get_text() for para in paragraphs])
 
@@ -52,9 +49,32 @@ def fetch_website_content(url):
         st.error(f"Error fetching website content: {str(e)}")
         return ""
 
-# Load website content (you can replace this URL with your website's URL)
+# Query the database for FAQs or relevant content
+def query_database_for_answer(question, database_df):
+    try:
+        # This assumes the database has a 'question' and 'answer' column
+        matching_row = database_df[database_df['question'].str.contains(question, case=False, na=False)]
+        if not matching_row.empty:
+            return matching_row['answer'].values[0]
+        else:
+            return None
+    except Exception as e:
+        st.error(f"Error querying the database: {str(e)}")
+        return None
+
+# Load website content (replace this URL with your website's URL)
 website_url = "https://www.keplercollege.com"  # Replace with your website URL
 website_content = fetch_website_content(website_url)
+
+# Load your database (replace this with your actual database loading process)
+# Here I'm using a sample DataFrame for FAQs
+data = {
+    'question': ['What is the admission process?', 'What programs does Kepler offer?', 'Is financial aid available?'],
+    'answer': ['The admission process includes an online application form and an interview.', 
+               'Kepler offers undergraduate and postgraduate programs in various fields.',
+               'Yes, financial aid is available for eligible students through various programs.']
+}
+faq_df = pd.DataFrame(data)
 
 # Function to get a response from OpenAI API
 def get_openai_response(question, context):
@@ -117,8 +137,14 @@ def handle_user_input():
     user_input = st.session_state.input_text.strip()  # Get the input text
 
     if user_input != "":
-        # Get response from the website content using OpenAI API
-        chatbot_response = get_openai_response(user_input, website_content)
+        # First, check the database for an answer
+        db_answer = query_database_for_answer(user_input, faq_df)
+
+        # If no answer is found in the database, fall back to website content
+        if db_answer:
+            chatbot_response = db_answer
+        else:
+            chatbot_response = get_openai_response(user_input, website_content)
 
         # Add the conversation to session state
         st.session_state.conversation.append({"user": user_input, "chatbot": chatbot_response})
