@@ -13,19 +13,37 @@ nltk.data.path.append('./.nltk_data')
 # Function to check if NLTK resources are available
 def check_nltk_resources():
     try:
+        # Check for the standard punkt tokenizer
         nltk.data.find('tokenizers/punkt')
         st.success("NLTK 'punkt' tokenizer is available.")
     except LookupError:
         st.error("NLTK 'punkt' tokenizer not found. Please ensure it's available in the .nltk_data directory.")
 
+# Call the function to check resources
 check_nltk_resources()
 
 # Set OpenAI API key
 openai.api_key = st.secrets["openai"]["api_key"]
 
+# Load the Chatbot CSV data with 'Questions' and 'Answers' columns
+try:
+    df = pd.read_csv('Chatbot.csv')
+
+    # Check if the required columns exist
+    if 'Questions' not in df.columns or 'Answers' not in df.columns:
+        raise ValueError("CSV must contain 'Questions' and 'Answers' columns.")
+
+    # Extract the questions and answers into a dictionary
+    chatbot_data = dict(zip(df['Questions'], df['Answers']))
+    st.success("Chatbot CSV data loaded successfully.")
+except Exception as e:
+    st.error(f"Error loading Chatbot CSV data: {str(e)}")
+    chatbot_data = {}  # Empty dictionary if loading fails
+
 # Function to preprocess text
 def preprocess_text(text):
     try:
+        # Use only the standard punkt tokenizer
         tokens = word_tokenize(text.lower())
         return tokens
     except Exception as e:
@@ -35,10 +53,12 @@ def preprocess_text(text):
 # Function to fetch and parse content from a website
 def fetch_website_content(url):
     try:
+        # Send a request to the website
         response = requests.get(url)
         soup = BeautifulSoup(response.content, 'html.parser')
 
         # Extract all text from the website
+        # You can customize this part to extract specific content such as paragraphs, headings, etc.
         paragraphs = soup.find_all('p')
         website_text = " ".join([para.get_text() for para in paragraphs])
 
@@ -47,29 +67,11 @@ def fetch_website_content(url):
         st.error(f"Error fetching website content: {str(e)}")
         return ""
 
-# Load the Chatbot.csv data (ensure this file is in the same directory as the .py script)
-def load_chatbot_data():
-    try:
-        df = pd.read_csv('Chatbot.csv')
-        # Ensure columns are named 'Question' and 'Answer'
-        if 'Question' not in df.columns or 'Answer' not in df.columns:
-            raise ValueError("CSV must contain 'Question' and 'Answer' columns.")
-        return df
-    except Exception as e:
-        st.error(f"Error loading Chatbot CSV data: {str(e)}")
-        return pd.DataFrame()
+# Load website content (you can replace this URL with your website's URL)
+website_url = "https://keplercollege.ac.rw/"  # Replace with your website URL
+website_content = fetch_website_content(website_url)
 
-# Initialize the chatbot data
-chatbot_data = load_chatbot_data()
-
-# Function to get an answer from the Chatbot.csv database
-def get_answer_from_database(question):
-    for idx, row in chatbot_data.iterrows():
-        if row['Question'].lower() == question.lower():
-            return row['Answer']
-    return None
-
-# Function to get a response from OpenAI API (if the question is not found in the CSV)
+# Function to get a response from OpenAI API
 def get_openai_response(question, context):
     try:
         response = openai.ChatCompletion.create(
@@ -80,6 +82,16 @@ def get_openai_response(question, context):
         return response['choices'][0]['message']['content']
     except Exception as e:
         return f"Error: {str(e)}"
+
+# Function to get chatbot response
+def get_chatbot_response(user_input):
+    # First, check if the question exists in the chatbot data (from CSV)
+    if user_input in chatbot_data:
+        return chatbot_data[user_input]
+    
+    # If the question is not found in the chatbot data, then search the website
+    website_response = get_openai_response(user_input, website_content)
+    return website_response
 
 # Streamlit UI with header image and instructions
 header_image_path = "header.png"  # Ensure this image exists in your working directory
@@ -128,16 +140,8 @@ def handle_user_input():
     user_input = st.session_state.input_text.strip()  # Get the input text
 
     if user_input != "":
-        # Check if the question exists in the Chatbot database
-        response_from_db = get_answer_from_database(user_input)
-        
-        if response_from_db:
-            chatbot_response = response_from_db  # Answer from the database
-        else:
-            # Get response from the website content using OpenAI API if not found in the database
-            website_url = "https://keplercollege.ac.rw/"  # Replace with your website URL
-            website_content = fetch_website_content(website_url)
-            chatbot_response = get_openai_response(user_input, website_content)
+        # Get response from the chatbot or website
+        chatbot_response = get_chatbot_response(user_input)
 
         # Add the conversation to session state
         st.session_state.conversation.append({"user": user_input, "chatbot": chatbot_response})
