@@ -42,14 +42,13 @@ def fetch_website_content(url):
         response = requests.get(url)
         soup = BeautifulSoup(response.content, 'html.parser')
 
-        # Extract all text from the website
-        paragraphs = soup.find_all('p')  # Can be customized to fetch specific content
+        # Extract all text from the website (we can refine this based on the structure)
+        paragraphs = soup.find_all('p')
         website_text = " ".join([para.get_text() for para in paragraphs])
 
-        # You can further refine the content scraping based on specific HTML tags
-        # Example: Extracting content from headers or divs for better context
-        # headers = soup.find_all(['h1', 'h2', 'h3', 'h4'])
-        # website_text += " ".join([header.get_text() for header in headers])
+        # Optionally, include headers or other sections that might provide important context
+        headers = soup.find_all(['h1', 'h2', 'h3', 'h4'])
+        website_text += " ".join([header.get_text() for header in headers])
 
         return website_text
     except requests.exceptions.RequestException as e:
@@ -60,7 +59,7 @@ def fetch_website_content(url):
 website_url = "https://keplercollege.ac.rw/"  # Replace with your website URL
 website_content = fetch_website_content(website_url)
 
-# Function to get a response from OpenAI API
+# Function to get a response from OpenAI API using the website content
 def get_openai_response(question, context):
     try:
         response = openai.ChatCompletion.create(
@@ -71,6 +70,29 @@ def get_openai_response(question, context):
         return response['choices'][0]['message']['content']
     except Exception as e:
         return f"Error: {str(e)}"
+
+# Function to get information from the chatbot database (for fallback)
+def get_database_info(query, df):
+    # Search for matching entries in the DataFrame (e.g., by the column 'question')
+    matches = df[df['question'].str.contains(query, case=False, na=False)]
+    if not matches.empty:
+        return matches.iloc[0]['answer']  # Return the first matching answer
+    else:
+        return "Sorry, I could not find an answer in the database."
+
+# Example chatbot database (replace with your actual data)
+# Make sure your chatbot database contains columns like 'question' and 'answer'
+chatbot_data = {
+    'question': ['What is Kepler College?', 'How do I apply?', 'What programs are offered?'],
+    'answer': [
+        "Kepler College is a dynamic institution providing quality education in various fields.",
+        "To apply, visit our website and fill out the online application form.",
+        "Kepler College offers programs in various disciplines, including Business, IT, and Education."
+    ]
+}
+
+# Convert the example database into a pandas DataFrame
+chatbot_df = pd.DataFrame(chatbot_data)
 
 # Streamlit UI with header image and instructions
 header_image_path = "header.png"  # Ensure this image exists in your working directory
@@ -119,8 +141,12 @@ def handle_user_input():
     user_input = st.session_state.input_text.strip()  # Get the input text
 
     if user_input != "":
-        # Get response from the website content using OpenAI API
-        chatbot_response = get_openai_response(user_input, website_content)
+        # First, try to get a response from the chatbot database
+        chatbot_response = get_database_info(user_input, chatbot_df)
+
+        # If no useful answer from the database, fallback to the website content
+        if "Sorry" in chatbot_response:
+            chatbot_response = get_openai_response(user_input, website_content)
 
         # Add the conversation to session state
         st.session_state.conversation.append({"user": user_input, "chatbot": chatbot_response})
