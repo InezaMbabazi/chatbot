@@ -1,9 +1,11 @@
 import openai
 import pandas as pd
 import streamlit as st
+import os
+import requests
+from bs4 import BeautifulSoup
 import nltk
 from nltk.tokenize import word_tokenize
-import os
 
 # Set the NLTK data path to the local .nltk_data directory
 nltk.data.path.append('./.nltk_data')
@@ -33,19 +35,28 @@ def preprocess_text(text):
         st.error(f"Error processing text: {str(e)}")
         return []
 
-# Load your DataFrame
-try:
-    df = pd.read_csv('Chatbot.csv')
-    if 'Questions' not in df.columns or 'Answers' not in df.columns:
-        st.error("The 'Questions' or 'Answers' column is missing in the dataset.")
-    else:
-        df['Processed_Questions'] = df['Questions'].apply(preprocess_text)
-except FileNotFoundError:
-    st.error("Chatbot.csv file not found. Please upload the file.")
-except Exception as e:
-    st.error(f"Error loading dataset: {str(e)}")
+# Function to fetch and parse content from a website
+def fetch_website_content(url):
+    try:
+        # Send a request to the website
+        response = requests.get(url)
+        soup = BeautifulSoup(response.content, 'html.parser')
 
-# Function to get a response from the OpenAI API
+        # Extract all text from the website
+        # You can customize this part to extract specific content such as paragraphs, headings, etc.
+        paragraphs = soup.find_all('p')
+        website_text = " ".join([para.get_text() for para in paragraphs])
+
+        return website_text
+    except requests.exceptions.RequestException as e:
+        st.error(f"Error fetching website content: {str(e)}")
+        return ""
+
+# Load website content (you can replace this URL with your website's URL)
+website_url = "https://www.keplercollege.com"  # Replace with your website URL
+website_content = fetch_website_content(website_url)
+
+# Function to get a response from OpenAI API
 def get_openai_response(question, context):
     try:
         response = openai.ChatCompletion.create(
@@ -58,13 +69,6 @@ def get_openai_response(question, context):
         return response['choices'][0]['message']['content']
     except Exception as e:
         return f"Error: {str(e)}"
-
-# Function to check if the user's question matches any in the DataFrame
-def get_response_from_dataframe(user_input):
-    for index, row in df.iterrows():
-        if row['Questions'].lower() in user_input.lower():
-            return row['Answers']
-    return None
 
 # Streamlit UI with header image and instructions
 header_image_path = "header.png"  # Ensure this image exists in your working directory
@@ -82,7 +86,7 @@ st.markdown("""
         <p>To interact with this AI assistant, you can:</p>
         <ul style="list-style-type: square;">
             <li>Type a question or message in the input field below and press Enter to submit.</li>
-            <li>If your question matches one in the database, you'll receive the predefined answer.</li>
+            <li>The chatbot will respond based on the website's content and knowledge base.</li>
         </ul>
     </div>
     """, unsafe_allow_html=True)
@@ -113,14 +117,8 @@ def handle_user_input():
     user_input = st.session_state.input_text.strip()  # Get the input text
 
     if user_input != "":
-        # Try to get a response from the DataFrame
-        response = get_response_from_dataframe(user_input)
-
-        if response:
-            chatbot_response = response
-        else:
-            context = df.to_string(index=False)  # Create a context from the entire DataFrame
-            chatbot_response = get_openai_response(user_input, context)
+        # Get response from the website content using OpenAI API
+        chatbot_response = get_openai_response(user_input, website_content)
 
         # Add the conversation to session state
         st.session_state.conversation.append({"user": user_input, "chatbot": chatbot_response})
