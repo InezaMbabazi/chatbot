@@ -1,12 +1,11 @@
 import openai
 import pandas as pd
 import streamlit as st
-import nltk
-from nltk.tokenize import word_tokenize
 import os
 import requests
-from requests.exceptions import RequestException, Timeout
 from bs4 import BeautifulSoup
+import nltk
+from nltk.tokenize import word_tokenize
 
 # Set the NLTK data path to the local .nltk_data directory
 nltk.data.path.append('./.nltk_data')
@@ -36,44 +35,28 @@ def preprocess_text(text):
         st.error(f"Error processing text: {str(e)}")
         return []
 
-# Load your DataFrame
-try:
-    df = pd.read_csv('Chatbot.csv')
-    if 'Questions' not in df.columns or 'Answers' not in df.columns:
-        st.error("The 'Questions' or 'Answers' column is missing in the dataset.")
-    else:
-        df['Processed_Questions'] = df['Questions'].apply(preprocess_text)
-except FileNotFoundError:
-    st.error("Chatbot.csv file not found. Please upload the file.")
-except Exception as e:
-    st.error(f"Error loading dataset: {str(e)}")
-
 # Function to fetch and parse content from a website
 def fetch_website_content(url):
     try:
-        # Set a timeout for the request (e.g., 5 seconds)
-        response = requests.get(url, timeout=5)
-        response.raise_for_status()  # Check if the request was successful (200 OK)
-        
-        # Parse the website content using BeautifulSoup
+        # Send a request to the website
+        response = requests.get(url)
         soup = BeautifulSoup(response.content, 'html.parser')
-        
+
         # Extract all text from the website
-        paragraphs = soup.find_all('p')  # Get all paragraph tags
+        # You can customize this part to extract specific content such as paragraphs, headings, etc.
+        paragraphs = soup.find_all('p')
         website_text = " ".join([para.get_text() for para in paragraphs])
 
         return website_text
-    except Timeout:
-        st.error(f"The request to {url} timed out. Please check the server status.")
-        return ""
-    except RequestException as e:
+    except requests.exceptions.RequestException as e:
         st.error(f"Error fetching website content: {str(e)}")
         return ""
 
-# Use the updated URL
-website_url = "https://keplercollege.ac.rw/"
+# Load website content (you can replace this URL with your website's URL)
+website_url = "https://keplercollege.ac.rw/"  # Replace with your website URL
+website_content = fetch_website_content(website_url)
 
-# Function to get a response from the OpenAI API
+# Function to get a response from OpenAI API
 def get_openai_response(question, context):
     try:
         response = openai.ChatCompletion.create(
@@ -86,13 +69,6 @@ def get_openai_response(question, context):
         return response['choices'][0]['message']['content']
     except Exception as e:
         return f"Error: {str(e)}"
-
-# Function to check if the user's question matches any in the DataFrame
-def get_response_from_dataframe(user_input):
-    for index, row in df.iterrows():
-        if row['Questions'].lower() in user_input.lower():
-            return row['Answers']
-    return None
 
 # Streamlit UI with header image and instructions
 header_image_path = "header.png"  # Ensure this image exists in your working directory
@@ -109,9 +85,8 @@ st.markdown("""
         <h3 style="color: #2E86C1;">Welcome to Kepler College's AI-Powered Chatbot</h3>
         <p>To interact with this AI assistant, you can:</p>
         <ul style="list-style-type: square;">
-            <li>Type a question or message in the input field below and press Enter.</li>
-            <li>If your question matches one in the database, you'll receive the predefined answer.</li>
-            <li>If the question is not found, the assistant will fetch relevant information from the website.</li>
+            <li>Type a question or message in the input field below and press Enter to submit.</li>
+            <li>The chatbot will respond based on the website's content and knowledge base.</li>
         </ul>
     </div>
     """, unsafe_allow_html=True)
@@ -133,33 +108,26 @@ st.markdown("""
 if 'conversation' not in st.session_state:
     st.session_state.conversation = []
 
-# Initialize a session state for user input
+# Initialize a session state for user input clearing
 if 'input_text' not in st.session_state:
     st.session_state.input_text = ""  # Default to empty string
 
-# User input with a unique key for session state
-user_input = st.text_input("You:", value=st.session_state.input_text, key="input_text")
+# Function to handle user input after pressing Enter
+def handle_user_input():
+    user_input = st.session_state.input_text.strip()  # Get the input text
 
-# Handle input submission by checking if the input is not empty
-if user_input.strip() != "":
-    # Try to get a response from the DataFrame
-    response = get_response_from_dataframe(user_input)
+    if user_input != "":
+        # Get response from the website content using OpenAI API
+        chatbot_response = get_openai_response(user_input, website_content)
 
-    if response:
-        chatbot_response = response
-    else:
-        # Fetch website content if no match in the database
-        website_content = fetch_website_content(website_url)
-        if website_content:
-            chatbot_response = get_openai_response(user_input, website_content)
-        else:
-            chatbot_response = "I couldn't find an answer from the website, please try again later."
+        # Add the conversation to session state
+        st.session_state.conversation.append({"user": user_input, "chatbot": chatbot_response})
 
-    # Add the conversation to session state
-    st.session_state.conversation.append({"user": user_input, "chatbot": chatbot_response})
+        # Clear the input field by resetting the session state correctly
+        st.session_state.input_text = ""  # This clears the input field after sending the message
 
-    # Set the session state to clear input field after response
-    st.session_state.input_text = ""  # Clear input field after response
+# User input field with the updated functionality for Enter key
+user_input = st.text_input("You:", value=st.session_state.input_text, key="input_text", on_change=handle_user_input)
 
 # Display the last 3 conversations with new messages on top
 if st.session_state.conversation:
