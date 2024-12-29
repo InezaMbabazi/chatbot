@@ -1,11 +1,12 @@
 import openai
 import pandas as pd
 import streamlit as st
-import os
-import requests
-from bs4 import BeautifulSoup
 import nltk
 from nltk.tokenize import word_tokenize
+import os
+import requests
+from requests.exceptions import RequestException, Timeout
+from bs4 import BeautifulSoup
 
 # Set the NLTK data path to the local .nltk_data directory
 nltk.data.path.append('./.nltk_data')
@@ -13,6 +14,7 @@ nltk.data.path.append('./.nltk_data')
 # Function to check if NLTK resources are available
 def check_nltk_resources():
     try:
+        # Check for the standard punkt tokenizer
         nltk.data.find('tokenizers/punkt')
         st.success("NLTK 'punkt' tokenizer is available.")
     except LookupError:
@@ -27,56 +29,51 @@ openai.api_key = st.secrets["openai"]["api_key"]
 # Function to preprocess text
 def preprocess_text(text):
     try:
+        # Use only the standard punkt tokenizer
         tokens = word_tokenize(text.lower())
         return tokens
     except Exception as e:
         st.error(f"Error processing text: {str(e)}")
         return []
 
+# Load your DataFrame
+try:
+    df = pd.read_csv('Chatbot.csv')
+    if 'Questions' not in df.columns or 'Answers' not in df.columns:
+        st.error("The 'Questions' or 'Answers' column is missing in the dataset.")
+    else:
+        df['Processed_Questions'] = df['Questions'].apply(preprocess_text)
+except FileNotFoundError:
+    st.error("Chatbot.csv file not found. Please upload the file.")
+except Exception as e:
+    st.error(f"Error loading dataset: {str(e)}")
+
 # Function to fetch and parse content from a website
 def fetch_website_content(url):
     try:
-        # Send a request to the website
-        response = requests.get(url)
+        # Set a timeout for the request (e.g., 5 seconds)
+        response = requests.get(url, timeout=5)
+        response.raise_for_status()  # Check if the request was successful (200 OK)
+        
+        # Parse the website content using BeautifulSoup
         soup = BeautifulSoup(response.content, 'html.parser')
-
+        
         # Extract all text from the website
-        paragraphs = soup.find_all('p')
+        paragraphs = soup.find_all('p')  # Get all paragraph tags
         website_text = " ".join([para.get_text() for para in paragraphs])
 
         return website_text
-    except requests.exceptions.RequestException as e:
+    except Timeout:
+        st.error(f"The request to {url} timed out. Please check the server status.")
+        return ""
+    except RequestException as e:
         st.error(f"Error fetching website content: {str(e)}")
         return ""
 
-# Query the database for FAQs or relevant content
-def query_database_for_answer(question, database_df):
-    try:
-        # This assumes the database has a 'question' and 'answer' column
-        matching_row = database_df[database_df['question'].str.contains(question, case=False, na=False)]
-        if not matching_row.empty:
-            return matching_row['answer'].values[0]
-        else:
-            return None
-    except Exception as e:
-        st.error(f"Error querying the database: {str(e)}")
-        return None
+# Use the updated URL
+website_url = "https://keplercollege.ac.rw/"
 
-# Load website content (replace this URL with your website's URL)
-website_url = "https://www.keplercollege.com"  # Replace with your website URL
-website_content = fetch_website_content(website_url)
-
-# Load your database (replace this with your actual database loading process)
-# Here I'm using a sample DataFrame for FAQs
-data = {
-    'question': ['What is the admission process?', 'What programs does Kepler offer?', 'Is financial aid available?'],
-    'answer': ['The admission process includes an online application form and an interview.', 
-               'Kepler offers undergraduate and postgraduate programs in various fields.',
-               'Yes, financial aid is available for eligible students through various programs.']
-}
-faq_df = pd.DataFrame(data)
-
-# Function to get a response from OpenAI API
+# Function to get a response from the OpenAI API
 def get_openai_response(question, context):
     try:
         response = openai.ChatCompletion.create(
@@ -89,6 +86,13 @@ def get_openai_response(question, context):
         return response['choices'][0]['message']['content']
     except Exception as e:
         return f"Error: {str(e)}"
+
+# Function to check if the user's question matches any in the DataFrame
+def get_response_from_dataframe(user_input):
+    for index, row in df.iterrows():
+        if row['Questions'].lower() in user_input.lower():
+            return row['Answers']
+    return None
 
 # Streamlit UI with header image and instructions
 header_image_path = "header.png"  # Ensure this image exists in your working directory
@@ -105,8 +109,9 @@ st.markdown("""
         <h3 style="color: #2E86C1;">Welcome to Kepler College's AI-Powered Chatbot</h3>
         <p>To interact with this AI assistant, you can:</p>
         <ul style="list-style-type: square;">
-            <li>Type a question or message in the input field below and press Enter to submit.</li>
-            <li>The chatbot will respond based on the website's content and knowledge base.</li>
+            <li>Type a question or message in the input field below.</li>
+            <li>If your question matches one in the database, you'll receive the predefined answer.</li>
+            <li>If the question is not found, the assistant will fetch relevant information from the website.</li>
         </ul>
     </div>
     """, unsafe_allow_html=True)
@@ -132,28 +137,29 @@ if 'conversation' not in st.session_state:
 if 'input_text' not in st.session_state:
     st.session_state.input_text = ""  # Default to empty string
 
-# Function to handle user input after pressing Enter
-def handle_user_input():
-    user_input = st.session_state.input_text.strip()  # Get the input text
+# User input with a unique key for session state
+user_input = st.text_input("You:", value=st.session_state.input_text, key="input_text")
 
-    if user_input != "":
-        # First, check the database for an answer
-        db_answer = query_database_for_answer(user_input, faq_df)
+# Trigger response when the user presses "Enter" (on text input)
+if user_input.strip() != "":
+    # Try to get a response from the DataFrame
+    response = get_response_from_dataframe(user_input)
 
-        # If no answer is found in the database, fall back to website content
-        if db_answer:
-            chatbot_response = db_answer
-        else:
+    if response:
+        chatbot_response = response
+    else:
+        # Fetch website content if no match in the database
+        website_content = fetch_website_content(website_url)
+        if website_content:
             chatbot_response = get_openai_response(user_input, website_content)
+        else:
+            chatbot_response = "I couldn't find an answer from the website, please try again later."
 
-        # Add the conversation to session state
-        st.session_state.conversation.append({"user": user_input, "chatbot": chatbot_response})
+    # Add the conversation to session state
+    st.session_state.conversation.append({"user": user_input, "chatbot": chatbot_response})
 
-        # Clear the input field by resetting the session state correctly
-        st.session_state.input_text = ""  # This clears the input field after sending the message
-
-# User input field with the updated functionality for Enter key
-user_input = st.text_input("You:", value=st.session_state.input_text, key="input_text", on_change=handle_user_input)
+    # Clear the input field by resetting the session state
+    st.session_state.input_text = ""
 
 # Display the last 3 conversations with new messages on top
 if st.session_state.conversation:
