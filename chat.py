@@ -13,13 +13,11 @@ nltk.data.path.append('./.nltk_data')
 # Function to check if NLTK resources are available
 def check_nltk_resources():
     try:
-        # Check for the standard punkt tokenizer
         nltk.data.find('tokenizers/punkt')
         st.success("NLTK 'punkt' tokenizer is available.")
     except LookupError:
         st.error("NLTK 'punkt' tokenizer not found. Please ensure it's available in the .nltk_data directory.")
 
-# Call the function to check resources
 check_nltk_resources()
 
 # Set OpenAI API key
@@ -28,7 +26,6 @@ openai.api_key = st.secrets["openai"]["api_key"]
 # Function to preprocess text
 def preprocess_text(text):
     try:
-        # Use only the standard punkt tokenizer
         tokens = word_tokenize(text.lower())
         return tokens
     except Exception as e:
@@ -38,24 +35,41 @@ def preprocess_text(text):
 # Function to fetch and parse content from a website
 def fetch_website_content(url):
     try:
-        # Send a request to the website
         response = requests.get(url)
         soup = BeautifulSoup(response.content, 'html.parser')
 
-        # Extract all text from the website (we can refine this based on the structure)
+        # Extract all text from the website
         paragraphs = soup.find_all('p')
         website_text = " ".join([para.get_text() for para in paragraphs])
-
-        # Optionally, include headers or other sections that might provide important context
-        headers = soup.find_all(['h1', 'h2', 'h3', 'h4'])
-        website_text += " ".join([header.get_text() for header in headers])
 
         return website_text
     except requests.exceptions.RequestException as e:
         st.error(f"Error fetching website content: {str(e)}")
         return ""
 
-# Function to get a response from OpenAI API using the website content
+# Load the Chatbot.csv data (ensure this file is in the same directory as the .py script)
+def load_chatbot_data():
+    try:
+        df = pd.read_csv('Chatbot.csv')
+        # Ensure columns are named 'Question' and 'Answer'
+        if 'Question' not in df.columns or 'Answer' not in df.columns:
+            raise ValueError("CSV must contain 'Question' and 'Answer' columns.")
+        return df
+    except Exception as e:
+        st.error(f"Error loading Chatbot CSV data: {str(e)}")
+        return pd.DataFrame()
+
+# Initialize the chatbot data
+chatbot_data = load_chatbot_data()
+
+# Function to get an answer from the Chatbot.csv database
+def get_answer_from_database(question):
+    for idx, row in chatbot_data.iterrows():
+        if row['Question'].lower() == question.lower():
+            return row['Answer']
+    return None
+
+# Function to get a response from OpenAI API (if the question is not found in the CSV)
 def get_openai_response(question, context):
     try:
         response = openai.ChatCompletion.create(
@@ -66,41 +80,6 @@ def get_openai_response(question, context):
         return response['choices'][0]['message']['content']
     except Exception as e:
         return f"Error: {str(e)}"
-
-# Function to get information from the chatbot database (for fallback)
-def get_database_info(query, df):
-    # Preprocess the user input query
-    query_tokens = preprocess_text(query)
-    
-    # Iterate through the database and search for matching questions
-    for index, row in df.iterrows():
-        # Preprocess each question in the database
-        db_question_tokens = preprocess_text(row['Question'])
-        
-        # Check for token overlap (simple keyword matching for demonstration)
-        if any(token in db_question_tokens for token in query_tokens):
-            return row['Answer']  # Return the matching answer
-    
-    return "Sorry, I could not find an answer in the database."
-
-# Load the Chatbot database (Chatbot.csv file)
-def load_chatbot_data(file_path):
-    try:
-        # Read the CSV file into a pandas DataFrame
-        df = pd.read_csv(file_path)
-        
-        # Check if the expected columns ('Question', 'Answer') exist
-        if 'Question' not in df.columns or 'Answer' not in df.columns:
-            st.error("The CSV file must contain 'Question' and 'Answer' columns.")
-            return pd.DataFrame()  # Return an empty DataFrame in case of error
-        
-        return df
-    except Exception as e:
-        st.error(f"Error loading CSV file: {str(e)}")
-        return pd.DataFrame()
-
-# Load the chatbot data from Chatbot.csv
-chatbot_df = load_chatbot_data('Chatbot.csv')  # Assuming the file is in the same directory as the script
 
 # Streamlit UI with header image and instructions
 header_image_path = "header.png"  # Ensure this image exists in your working directory
@@ -149,13 +128,15 @@ def handle_user_input():
     user_input = st.session_state.input_text.strip()  # Get the input text
 
     if user_input != "":
-        # First, try to get a response from the chatbot database
-        chatbot_response = get_database_info(user_input, chatbot_df)
-
-        # If no useful answer from the database, fallback to the website content
-        if "Sorry" in chatbot_response:
-            # In a real scenario, we would fetch content from a website, here we skip that step for simplicity
-            website_content = "Content from the website can be fetched here."
+        # Check if the question exists in the Chatbot database
+        response_from_db = get_answer_from_database(user_input)
+        
+        if response_from_db:
+            chatbot_response = response_from_db  # Answer from the database
+        else:
+            # Get response from the website content using OpenAI API if not found in the database
+            website_url = "https://keplercollege.ac.rw/"  # Replace with your website URL
+            website_content = fetch_website_content(website_url)
             chatbot_response = get_openai_response(user_input, website_content)
 
         # Add the conversation to session state
