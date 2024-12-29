@@ -17,7 +17,7 @@ def check_nltk_resources():
         nltk.data.find('tokenizers/punkt')
         st.success("NLTK 'punkt' tokenizer is available.")
     except LookupError:
-        st.error("NLTK 'punkt' tokenizer not found. Please ensure it's available in the .nltk_data directory.")
+        st.error("NLTK 'punkt' tokenizer is missing. Ensure it's available in the .nltk_data directory.")
 
 # Call the function to check resources
 check_nltk_resources()
@@ -25,10 +25,23 @@ check_nltk_resources()
 # Set OpenAI API key
 openai.api_key = st.secrets["openai"]["api_key"]
 
+# Load CSV dataset (Chabot.csv)
+def load_chatbot_csv():
+    try:
+        # Ensure the CSV file exists in the working directory
+        chatbot_data = pd.read_csv('Chabot.csv')
+        return chatbot_data
+    except FileNotFoundError:
+        st.error("Chabot.csv file not found. Please upload the file.")
+        return None
+
+# Load the chatbot CSV dataset
+chatbot_data = load_chatbot_csv()
+
 # Function to preprocess text
 def preprocess_text(text):
     try:
-        # Use only the standard punkt tokenizer
+        # Tokenize text using NLTK
         tokens = word_tokenize(text.lower())
         return tokens
     except Exception as e:
@@ -43,7 +56,6 @@ def fetch_website_content(url):
         soup = BeautifulSoup(response.content, 'html.parser')
 
         # Extract all text from the website
-        # You can customize this part to extract specific content such as paragraphs, headings, etc.
         paragraphs = soup.find_all('p')
         website_text = " ".join([para.get_text() for para in paragraphs])
 
@@ -53,7 +65,7 @@ def fetch_website_content(url):
         return ""
 
 # Load website content (you can replace this URL with your website's URL)
-website_url = "https://keplercollege.ac.rw/"  # Replace with your website URL
+website_url = "https://keplercollege.ac.rw/"
 website_content = fetch_website_content(website_url)
 
 # Function to get a response from OpenAI API
@@ -117,8 +129,17 @@ def handle_user_input():
     user_input = st.session_state.input_text.strip()  # Get the input text
 
     if user_input != "":
-        # Get response from the website content using OpenAI API
-        chatbot_response = get_openai_response(user_input, website_content)
+        # Check if the question is in the CSV dataset (Questions column)
+        if chatbot_data is not None:
+            # Search for a matching question in the Questions column (case insensitive)
+            matching_row = chatbot_data[chatbot_data['Questions'].str.contains(user_input, case=False, na=False)]
+
+            if not matching_row.empty:
+                # If a match is found, return the corresponding answer from the Answers column
+                chatbot_response = matching_row['Answers'].values[0]
+            else:
+                # If no match is found, fetch response from website content using OpenAI API
+                chatbot_response = get_openai_response(user_input, website_content)
 
         # Add the conversation to session state
         st.session_state.conversation.append({"user": user_input, "chatbot": chatbot_response})
