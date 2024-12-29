@@ -25,18 +25,18 @@ check_nltk_resources()
 # Set OpenAI API key
 openai.api_key = st.secrets["openai"]["api_key"]
 
-# Load CSV dataset (Chabot.csv)
+# Load CSV dataset (Chatbot.csv)
 def load_chatbot_csv():
     try:
         # Load the CSV file from the same directory as chatbot.py
-        chatbot_data = pd.read_csv(os.path.join(os.getcwd(), 'Chabot.csv'))  # Load CSV from the current working directory
+        chatbot_data = pd.read_csv(os.path.join(os.getcwd(), 'Chatbot.csv'))  # Load CSV from the current working directory
         if 'Questions' in chatbot_data.columns and 'Answers' in chatbot_data.columns:
             return chatbot_data
         else:
-            st.error("Chabot.csv must contain 'Questions' and 'Answers' columns.")
+            st.error("Chatbot.csv must contain 'Questions' and 'Answers' columns.")
             return None
     except FileNotFoundError:
-        st.error("Chabot.csv file not found in the current directory. Please upload the file.")
+        st.error("Chatbot.csv file not found in the current directory. Please upload the file.")
         return None
 
 # Load chatbot CSV data
