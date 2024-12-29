@@ -125,8 +125,8 @@ if st.button("Send"):
         # Add the conversation to session state
         st.session_state.conversation.append({"user": user_input, "chatbot": chatbot_response})
 
-        # Clear the input field by resetting the session state
-        st.session_state.input_text = ""
+        # Clear the input field by resetting the session state correctly
+        st.session_state.input_text = ""  # This clears the input field after sending the message
 
 # Display the last 3 conversations with new messages on top
 if st.session_state.conversation:
