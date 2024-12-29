@@ -81,7 +81,7 @@ st.markdown("""
         <h3 style="color: #2E86C1;">Welcome to Kepler College's AI-Powered Chatbot</h3>
         <p>To interact with this AI assistant, you can:</p>
         <ul style="list-style-type: square;">
-            <li>Type a question or message in the input field below.</li>
+            <li>Type a question or message in the input field below and press Enter to submit.</li>
             <li>If your question matches one in the database, you'll receive the predefined answer.</li>
         </ul>
     </div>
@@ -108,11 +108,11 @@ if 'conversation' not in st.session_state:
 if 'input_text' not in st.session_state:
     st.session_state.input_text = ""  # Default to empty string
 
-# User input with a unique key for session state
-user_input = st.text_input("You:", value=st.session_state.input_text, key="input_text")
+# Function to handle user input after pressing Enter
+def handle_user_input():
+    user_input = st.session_state.input_text.strip()  # Get the input text
 
-if st.button("Send"):
-    if user_input.strip() != "":
+    if user_input != "":
         # Try to get a response from the DataFrame
         response = get_response_from_dataframe(user_input)
 
@@ -127,6 +127,9 @@ if st.button("Send"):
 
         # Clear the input field by resetting the session state correctly
         st.session_state.input_text = ""  # This clears the input field after sending the message
+
+# User input field with the updated functionality for Enter key
+user_input = st.text_input("You:", value=st.session_state.input_text, key="input_text", on_change=handle_user_input)
 
 # Display the last 3 conversations with new messages on top
 if st.session_state.conversation:
