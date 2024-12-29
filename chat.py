@@ -28,15 +28,15 @@ openai.api_key = st.secrets["openai"]["api_key"]
 # Load CSV dataset (Chabot.csv)
 def load_chatbot_csv():
     try:
-        # Load the CSV file from the same directory
-        chatbot_data = pd.read_csv('Chabot.csv')  # Ensure Chabot.csv is in the same directory
+        # Load the CSV file from the same directory as chatbot.py
+        chatbot_data = pd.read_csv(os.path.join(os.getcwd(), 'Chabot.csv'))  # Load CSV from the current working directory
         if 'Questions' in chatbot_data.columns and 'Answers' in chatbot_data.columns:
             return chatbot_data
         else:
             st.error("Chabot.csv must contain 'Questions' and 'Answers' columns.")
             return None
     except FileNotFoundError:
-        st.error("Chabot.csv file not found. Please upload the file.")
+        st.error("Chabot.csv file not found in the current directory. Please upload the file.")
         return None
 
 # Load chatbot CSV data
