@@ -158,7 +158,7 @@ if user_input.strip() != "":
     # Add the conversation to session state
     st.session_state.conversation.append({"user": user_input, "chatbot": chatbot_response})
 
-    # Clear the input field by resetting the session state
+    # Clear the input field by resetting the session state **after** the user submits input
     st.session_state.input_text = ""
 
 # Display the last 3 conversations with new messages on top
