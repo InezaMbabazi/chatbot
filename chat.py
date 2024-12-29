@@ -35,20 +35,18 @@ except Exception as e:
     st.error(f"Error loading dataset: {str(e)}")
 
 # Function to scrape website content
-def scrape_website_content(url):
+def fetch_website_content(url):
     try:
-        response = requests.get(url)
+        headers = {'User-Agent': 'Mozilla/5.0'}
+        response = requests.get(url, headers=headers)
         if response.status_code == 200:
             soup = BeautifulSoup(response.text, 'html.parser')
-            # Customize the following to extract relevant content
-            content = soup.get_text()
-            return content
+            # Extract and return the main text content of the website
+            return soup.get_text()
         else:
-            st.error(f"Failed to fetch website data: Status code {response.status_code}")
-            return None
+            return f"Failed to fetch website content. HTTP Status Code: {response.status_code}"
     except Exception as e:
-        st.error(f"Error scraping website: {str(e)}")
-        return None
+        return f"Error fetching website content: {str(e)}"
 
 # Function to get a response from the OpenAI API
 def get_openai_response(question, context):
@@ -71,6 +69,23 @@ def get_response_from_dataframe(user_input):
             return row['Answers']
     return None
 
+# Function to combine responses from multiple sources
+def get_combined_response(user_input):
+    # Try to find a response in the dataset
+    response = get_response_from_dataframe(user_input)
+    
+    if response:
+        return response
+    else:
+        # If no match, fetch website content
+        website_url = "https://keplercollege.ac.rw/"
+        website_content = fetch_website_content(website_url)
+        
+        # Use OpenAI to process user input with website context
+        context = f"Website Content: {website_content[:2000]}"  # Limit context length to 2000 characters
+        chatbot_response = get_openai_response(user_input, context)
+        return chatbot_response
+
 # Streamlit UI
 st.title("Kepler College Chatbot")
 
@@ -78,32 +93,23 @@ st.title("Kepler College Chatbot")
 if 'conversation' not in st.session_state:
     st.session_state.conversation = []
 
-# User input
-user_input = st.text_input("You:", "")
+# User input with a unique key for session state
+user_input = st.text_input("You:", key="user_input")
 
 if user_input:
-    # Try scraping website content
-    website_content = scrape_website_content("https://keplercollege.ac.rw/")
-    response_from_website = None
-    if website_content and user_input.lower() in website_content.lower():
-        response_from_website = "Found relevant information on the website. Please visit for detailed information."
-
-    # Try to get a response from the DataFrame
-    response_from_dataframe = get_response_from_dataframe(user_input)
-
-    # Use OpenAI API if no match in website or DataFrame
-    if response_from_website:
-        chatbot_response = response_from_website
-    elif response_from_dataframe:
-        chatbot_response = response_from_dataframe
-    else:
-        context = df.to_string(index=False)  # Create a context from the entire DataFrame
-        chatbot_response = get_openai_response(user_input, context)
-
+    # Process user input and generate a response
+    chatbot_response = get_combined_response(user_input)
+    
     # Add the conversation to session state
     st.session_state.conversation.append({"user": user_input, "chatbot": chatbot_response})
+    
+    # Clear the input field
+    st.session_state.user_input = ""  # Reset the input field
 
-# Display conversation history
+# Display the last 3 conversations with a scrolling chatbox style
 if st.session_state.conversation:
-    for chat in reversed(st.session_state.conversation):
-        st.markdown(f"**You:** {chat['user']}  \n**Chatbot:** {chat['chatbot']}")
+    st.markdown("<h4>Conversation History:</h4>", unsafe_allow_html=True)
+    for chat in reversed(st.session_state.conversation[-3:]):
+        st.markdown(f"<div style='background-color: #f9f9f9; border-radius: 10px; padding: 10px; margin-bottom: 10px;'>"
+                    f"<strong>You:</strong> {chat['user']}<br>"
+                    f"<strong>Chatbot:</strong> {chat['chatbot']}</div>", unsafe_allow_html=True)
