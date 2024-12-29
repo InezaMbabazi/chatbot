@@ -140,7 +140,7 @@ if 'input_text' not in st.session_state:
 # User input with a unique key for session state
 user_input = st.text_input("You:", value=st.session_state.input_text, key="input_text")
 
-# Handle input submission by detecting the user pressing Enter (value change)
+# Handle input submission by checking if the input is not empty
 if user_input.strip() != "":
     # Try to get a response from the DataFrame
     response = get_response_from_dataframe(user_input)
@@ -158,7 +158,7 @@ if user_input.strip() != "":
     # Add the conversation to session state
     st.session_state.conversation.append({"user": user_input, "chatbot": chatbot_response})
 
-    # Clear input field after response has been added
+    # Set the session state to clear input field after response
     st.session_state.input_text = ""  # Clear input field after response
 
 # Display the last 3 conversations with new messages on top
