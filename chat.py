@@ -42,10 +42,21 @@ def load_chatbot_csv():
 # Load chatbot CSV data
 chatbot_data = load_chatbot_csv()
 
-# Function to preprocess text
+# Synonym dictionary for flexibility in matching
+synonyms = {
+    "tuition": ["fees", "tuition fees", "cost", "payment"],
+    "admission": ["enrollment", "registration", "apply", "application"],
+    # Add more synonyms as needed
+}
+
+# Function to preprocess text and match synonyms
 def preprocess_text(text):
     try:
-        # Use only the standard punkt tokenizer
+        # Replace words in text with their synonyms
+        for key, synonym_list in synonyms.items():
+            for synonym in synonym_list:
+                text = text.replace(synonym, key)
+        # Tokenize the preprocessed text
         tokens = word_tokenize(text.lower())
         return tokens
     except Exception as e:
@@ -60,7 +71,6 @@ def fetch_website_content(url):
         soup = BeautifulSoup(response.content, 'html.parser')
 
         # Extract all text from the website
-        # You can customize this part to extract specific content such as paragraphs, headings, etc.
         paragraphs = soup.find_all('p')
         website_text = " ".join([para.get_text() for para in paragraphs])
 
@@ -69,7 +79,7 @@ def fetch_website_content(url):
         st.error(f"Error fetching website content: {str(e)}")
         return ""
 
-# Load website content (you can replace this URL with your website's URL)
+# Load website content
 website_url = "https://keplercollege.ac.rw/"  # Replace with your website URL
 website_content = fetch_website_content(website_url)
 
