@@ -25,35 +25,25 @@ check_nltk_resources()
 # Set OpenAI API key
 openai.api_key = st.secrets["openai"]["api_key"]
 
-# Function to preprocess and tokenize text using nltk
+# Function to preprocess text
 def preprocess_text(text):
     try:
-        # Tokenize the text using nltk.tokenize
-        tokens = word_tokenize(text.lower())  # Convert to lowercase for better matching
+        # Use only the standard punkt tokenizer
+        tokens = word_tokenize(text.lower())
         return tokens
     except Exception as e:
         st.error(f"Error processing text: {str(e)}")
         return []
 
-# Load Chatbot CSV data
-def load_chatbot_data():
-    try:
-        chatbot_df = pd.read_csv("Chatbot.csv")
-        if "Questions" not in chatbot_df.columns or "Answers" not in chatbot_df.columns:
-            raise ValueError("CSV must contain 'Questions' and 'Answers' columns.")
-        return chatbot_df
-    except Exception as e:
-        st.error(f"Error loading Chatbot CSV data: {str(e)}")
-        return pd.DataFrame()
-
-# Load website content (you can replace this URL with your website's URL)
+# Function to fetch and parse content from a website
 def fetch_website_content(url):
     try:
         # Send a request to the website
         response = requests.get(url)
         soup = BeautifulSoup(response.content, 'html.parser')
 
-        # Extract all text from the website (you can customize this part)
+        # Extract all text from the website
+        # You can customize this part to extract specific content such as paragraphs, headings, etc.
         paragraphs = soup.find_all('p')
         website_text = " ".join([para.get_text() for para in paragraphs])
 
@@ -62,13 +52,19 @@ def fetch_website_content(url):
         st.error(f"Error fetching website content: {str(e)}")
         return ""
 
+# Load website content (you can replace this URL with your website's URL)
+website_url = "https://keplercollege.ac.rw/"  # Replace with your website URL
+website_content = fetch_website_content(website_url)
+
 # Function to get a response from OpenAI API
 def get_openai_response(question, context):
     try:
         response = openai.ChatCompletion.create(
             model='gpt-3.5-turbo',
-            messages=[{"role": "system", "content": "You are a helpful assistant."},
-                      {"role": "user", "content": f"{question}\n\nContext: {context}"}]
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": f"{question}\n\nContext: {context}"}
+            ]
         )
         return response['choices'][0]['message']['content']
     except Exception as e:
@@ -95,35 +91,34 @@ st.markdown("""
     </div>
     """, unsafe_allow_html=True)
 
+# Apply custom CSS for layout styling
+st.markdown("""
+    <style>
+    .chatbox {
+        border: 2px solid #2196F3;
+        padding: 10px;
+        height: 200px;
+        overflow-y: scroll;
+        background-color: #f1f1f1;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
 # Initialize a session state for conversation history
 if 'conversation' not in st.session_state:
     st.session_state.conversation = []
+
+# Initialize a session state for user input clearing
+if 'input_text' not in st.session_state:
+    st.session_state.input_text = ""  # Default to empty string
 
 # Function to handle user input after pressing Enter
 def handle_user_input():
     user_input = st.session_state.input_text.strip()  # Get the input text
 
     if user_input != "":
-        # Tokenize the user input
-        user_tokens = preprocess_text(user_input)
-
-        # Load the chatbot data
-        chatbot_data = load_chatbot_data()
-
-        # Check if the tokens match any questions in the database
-        matched_answer = ""
-        for _, row in chatbot_data.iterrows():
-            question_tokens = preprocess_text(row['Questions'])
-            if any(token in question_tokens for token in user_tokens):  # Simple token matching
-                matched_answer = row['Answers']
-                break
-
-        if matched_answer:
-            chatbot_response = matched_answer
-        else:
-            # If no match found in the database, check the website content
-            website_content = fetch_website_content("https://keplercollege.ac.rw/")  # Use your website URL here
-            chatbot_response = get_openai_response(user_input, website_content)
+        # Get response from the website content using OpenAI API
+        chatbot_response = get_openai_response(user_input, website_content)
 
         # Add the conversation to session state
         st.session_state.conversation.append({"user": user_input, "chatbot": chatbot_response})
