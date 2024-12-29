@@ -4,33 +4,56 @@ import streamlit as st
 import os
 import requests
 from bs4 import BeautifulSoup
+import nltk
+from nltk.tokenize import word_tokenize
+
+# Set the NLTK data path to the local .nltk_data directory
+nltk.data.path.append('./.nltk_data')
+
+# Function to check if NLTK resources are available
+def check_nltk_resources():
+    try:
+        # Check for the standard punkt tokenizer
+        nltk.data.find('tokenizers/punkt')
+        st.success("NLTK 'punkt' tokenizer is available.")
+    except LookupError:
+        st.error("NLTK 'punkt' tokenizer not found. Please ensure it's available in the .nltk_data directory.")
+
+# Call the function to check resources
+check_nltk_resources()
 
 # Set OpenAI API key
 openai.api_key = st.secrets["openai"]["api_key"]
 
-# Load the Chatbot CSV data with 'Questions' and 'Answers' columns
-try:
-    df = pd.read_csv('Chatbot.csv')
+# Function to preprocess and tokenize text using nltk
+def preprocess_text(text):
+    try:
+        # Tokenize the text using nltk.tokenize
+        tokens = word_tokenize(text.lower())  # Convert to lowercase for better matching
+        return tokens
+    except Exception as e:
+        st.error(f"Error processing text: {str(e)}")
+        return []
 
-    # Check if the required columns exist
-    if 'Questions' not in df.columns or 'Answers' not in df.columns:
-        raise ValueError("CSV must contain 'Questions' and 'Answers' columns.")
+# Load Chatbot CSV data
+def load_chatbot_data():
+    try:
+        chatbot_df = pd.read_csv("Chatbot.csv")
+        if "Questions" not in chatbot_df.columns or "Answers" not in chatbot_df.columns:
+            raise ValueError("CSV must contain 'Questions' and 'Answers' columns.")
+        return chatbot_df
+    except Exception as e:
+        st.error(f"Error loading Chatbot CSV data: {str(e)}")
+        return pd.DataFrame()
 
-    # Extract the questions and answers into a dictionary
-    chatbot_data = dict(zip(df['Questions'], df['Answers']))
-    st.success("Chatbot CSV data loaded successfully.")
-except Exception as e:
-    st.error(f"Error loading Chatbot CSV data: {str(e)}")
-    chatbot_data = {}  # Empty dictionary if loading fails
-
-# Function to fetch and parse content from a website
+# Load website content (you can replace this URL with your website's URL)
 def fetch_website_content(url):
     try:
         # Send a request to the website
         response = requests.get(url)
         soup = BeautifulSoup(response.content, 'html.parser')
 
-        # Extract all text from the website (you can customize this part if needed)
+        # Extract all text from the website (you can customize this part)
         paragraphs = soup.find_all('p')
         website_text = " ".join([para.get_text() for para in paragraphs])
 
@@ -38,10 +61,6 @@ def fetch_website_content(url):
     except requests.exceptions.RequestException as e:
         st.error(f"Error fetching website content: {str(e)}")
         return ""
-
-# Load website content (replace with your website URL)
-website_url = "https://keplercollege.ac.rw/"  # Replace with your website URL
-website_content = fetch_website_content(website_url)
 
 # Function to get a response from OpenAI API
 def get_openai_response(question, context):
@@ -54,16 +73,6 @@ def get_openai_response(question, context):
         return response['choices'][0]['message']['content']
     except Exception as e:
         return f"Error: {str(e)}"
-
-# Function to get chatbot response
-def get_chatbot_response(user_input):
-    # First, check if the question exists in the chatbot data (from CSV)
-    if user_input in chatbot_data:
-        return chatbot_data[user_input]
-    
-    # If the question is not found in the chatbot data, then use OpenAI to generate a response
-    website_response = get_openai_response(user_input, website_content)
-    return website_response
 
 # Streamlit UI with header image and instructions
 header_image_path = "header.png"  # Ensure this image exists in your working directory
@@ -86,34 +95,35 @@ st.markdown("""
     </div>
     """, unsafe_allow_html=True)
 
-# Apply custom CSS for layout styling
-st.markdown("""
-    <style>
-    .chatbox {
-        border: 2px solid #2196F3;
-        padding: 10px;
-        height: 200px;
-        overflow-y: scroll;
-        background-color: #f1f1f1;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
 # Initialize a session state for conversation history
 if 'conversation' not in st.session_state:
     st.session_state.conversation = []
-
-# Initialize a session state for user input clearing
-if 'input_text' not in st.session_state:
-    st.session_state.input_text = ""  # Default to empty string
 
 # Function to handle user input after pressing Enter
 def handle_user_input():
     user_input = st.session_state.input_text.strip()  # Get the input text
 
     if user_input != "":
-        # Get response from the chatbot or website
-        chatbot_response = get_chatbot_response(user_input)
+        # Tokenize the user input
+        user_tokens = preprocess_text(user_input)
+
+        # Load the chatbot data
+        chatbot_data = load_chatbot_data()
+
+        # Check if the tokens match any questions in the database
+        matched_answer = ""
+        for _, row in chatbot_data.iterrows():
+            question_tokens = preprocess_text(row['Questions'])
+            if any(token in question_tokens for token in user_tokens):  # Simple token matching
+                matched_answer = row['Answers']
+                break
+
+        if matched_answer:
+            chatbot_response = matched_answer
+        else:
+            # If no match found in the database, check the website content
+            website_content = fetch_website_content("https://keplercollege.ac.rw/")  # Use your website URL here
+            chatbot_response = get_openai_response(user_input, website_content)
 
         # Add the conversation to session state
         st.session_state.conversation.append({"user": user_input, "chatbot": chatbot_response})
