@@ -3,22 +3,12 @@ import pandas as pd
 import streamlit as st
 import nltk
 from nltk.tokenize import word_tokenize
+from bs4 import BeautifulSoup
+import requests
 import os
 
 # Set the NLTK data path to the local .nltk_data directory
 nltk.data.path.append('./.nltk_data')
-
-# Function to check if NLTK resources are available
-def check_nltk_resources():
-    try:
-        # Check for the standard punkt tokenizer
-        nltk.data.find('tokenizers/punkt')
-        st.success("NLTK 'punkt' tokenizer is available.")
-    except LookupError:
-        st.error("NLTK 'punkt' tokenizer not found. Please ensure it's available in the .nltk_data directory.")
-
-# Call the function to check resources
-check_nltk_resources()
 
 # Set OpenAI API key
 openai.api_key = st.secrets["openai"]["api_key"]
@@ -26,7 +16,6 @@ openai.api_key = st.secrets["openai"]["api_key"]
 # Function to preprocess text
 def preprocess_text(text):
     try:
-        # Use only the standard punkt tokenizer
         tokens = word_tokenize(text.lower())
         return tokens
     except Exception as e:
@@ -44,6 +33,22 @@ except FileNotFoundError:
     st.error("Chatbot.csv file not found. Please upload the file.")
 except Exception as e:
     st.error(f"Error loading dataset: {str(e)}")
+
+# Function to scrape website content
+def scrape_website_content(url):
+    try:
+        response = requests.get(url)
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.text, 'html.parser')
+            # Customize the following to extract relevant content
+            content = soup.get_text()
+            return content
+        else:
+            st.error(f"Failed to fetch website data: Status code {response.status_code}")
+            return None
+    except Exception as e:
+        st.error(f"Error scraping website: {str(e)}")
+        return None
 
 # Function to get a response from the OpenAI API
 def get_openai_response(question, context):
@@ -66,40 +71,8 @@ def get_response_from_dataframe(user_input):
             return row['Answers']
     return None
 
-# Streamlit UI with header image and instructions
-header_image_path = "header.png"  # Ensure this image exists in your working directory
-if os.path.exists(header_image_path):
-    st.image(header_image_path, use_column_width=True)
-else:
-    st.warning("Header image not found. Please upload 'header_image.png'.")
-
-# Add chatbot title and instructions
+# Streamlit UI
 st.title("Kepler College Chatbot")
-
-st.markdown("""
-    <div style="background-color: #f0f0f5; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-        <h3 style="color: #2E86C1;">Welcome to Kepler College's AI-Powered Chatbot</h3>
-        <p>To interact with this AI assistant, you can:</p>
-        <ul style="list-style-type: square;">
-            <li>Type a question or message in the input field below.</li>
-            <li>If your question matches one in the database, you'll receive the predefined answer.</li>
-         
-       
-    </div>
-    """, unsafe_allow_html=True)
-
-# Apply custom CSS for layout styling
-st.markdown("""
-    <style>
-    .chatbox {
-        border: 2px solid #2196F3;
-        padding: 10px;
-        height: 200px;
-        overflow-y: scroll;
-        background-color: #f1f1f1;
-    }
-    </style>
-    """, unsafe_allow_html=True)
 
 # Initialize a session state for conversation history
 if 'conversation' not in st.session_state:
@@ -109,13 +82,20 @@ if 'conversation' not in st.session_state:
 user_input = st.text_input("You:", "")
 
 if user_input:
-    processed_input = preprocess_text(user_input)
+    # Try scraping website content
+    website_content = scrape_website_content("https://keplercollege.ac.rw/")
+    response_from_website = None
+    if website_content and user_input.lower() in website_content.lower():
+        response_from_website = "Found relevant information on the website. Please visit for detailed information."
 
     # Try to get a response from the DataFrame
-    response = get_response_from_dataframe(user_input)
+    response_from_dataframe = get_response_from_dataframe(user_input)
 
-    if response:
-        chatbot_response = response
+    # Use OpenAI API if no match in website or DataFrame
+    if response_from_website:
+        chatbot_response = response_from_website
+    elif response_from_dataframe:
+        chatbot_response = response_from_dataframe
     else:
         context = df.to_string(index=False)  # Create a context from the entire DataFrame
         chatbot_response = get_openai_response(user_input, context)
@@ -123,11 +103,7 @@ if user_input:
     # Add the conversation to session state
     st.session_state.conversation.append({"user": user_input, "chatbot": chatbot_response})
 
-    # Keep only the last 3 conversations
-    st.session_state.conversation = st.session_state.conversation[-3:]
-
-# Display the last 3 conversations with new messages on top
+# Display conversation history
 if st.session_state.conversation:
-    st.markdown("<h4>Conversation History:</h4>", unsafe_allow_html=True)
     for chat in reversed(st.session_state.conversation):
-        st.markdown(f"<div class='chatbox'><strong>You:</strong> {chat['user']}<br><strong>Chatbot:</strong> {chat['chatbot']}</div>", unsafe_allow_html=True)
+        st.markdown(f"**You:** {chat['user']}  \n**Chatbot:** {chat['chatbot']}")
