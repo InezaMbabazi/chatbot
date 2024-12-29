@@ -66,10 +66,8 @@ def get_openai_response(question, context):
     try:
         response = openai.ChatCompletion.create(
             model='gpt-3.5-turbo',
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": f"{question}\n\nContext: {context}"}
-            ]
+            messages=[{"role": "system", "content": "You are a helpful assistant."},
+                      {"role": "user", "content": f"{question}\n\nContext: {context}"}]
         )
         return response['choices'][0]['message']['content']
     except Exception as e:
@@ -93,12 +91,31 @@ def find_answer_in_csv(question, chatbot_df):
 # Load chatbot data
 chatbot_data = load_chatbot_data()
 
-# Load website content (you can replace this URL with your website's URL)
-website_url = "https://keplercollege.ac.rw/"  # Replace with your website URL
-website_content = fetch_website_content(website_url)
+# Specific URLs to scrape
+specific_links = [
+    "https://keplercollege.ac.rw/",
+    "https://keplercollege.ac.rw/about-us/",
+    "https://keplercollege.ac.rw/leadership/",
+    "https://keplercollege.ac.rw/faculty/",
+    "https://keplercollege.ac.rw/academics/",
+    "https://keplercollege.ac.rw/project-management/",
+    "https://keplercollege.ac.rw/business-analytics-2/",
+    "https://keplercollege.ac.rw/career-services/",
+    "https://keplercollege.ac.rw/research-and-community-service/",
+    "https://keplercollege.ac.rw/pro/",
+    "https://keplercollege.ac.rw/apply-project-management/",
+    "https://keplercollege.ac.rw/apply-business-analytics/",
+    "https://keplercollege.ac.rw/contact-us/"
+]
+
+# Fetch content from each of the specific URLs
+all_website_content = ""
+for link in specific_links:
+    all_website_content += f"Content from {link}:\n"
+    all_website_content += fetch_website_content(link) + "\n\n"
 
 # Combine website and CSV content
-combined_content = combine_data(website_content, chatbot_data)
+combined_content = combine_data(all_website_content, chatbot_data)
 
 # Streamlit UI with header image and instructions
 header_image_path = "header.png"  # Ensure this image exists in your working directory
@@ -110,20 +127,17 @@ else:
 # Add chatbot title and instructions
 st.title("Kepler College Chatbot")
 
-st.markdown("""
-    <div style="background-color: #f0f0f5; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-        <h3 style="color: #2E86C1;">Welcome to Kepler College's AI-Powered Chatbot</h3>
-        <p>To interact with this AI assistant, you can:</p>
-        <ul style="list-style-type: square;">
-            <li>Type a question or message in the input field below and press Enter to submit.</li>
-            <li>The chatbot will respond based on the website's content and knowledge base.</li>
-        </ul>
-    </div>
-    """, unsafe_allow_html=True)
+st.markdown("""<div style="background-color: #f0f0f5; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+    <h3 style="color: #2E86C1;">Welcome to Kepler College's AI-Powered Chatbot</h3>
+    <p>To interact with this AI assistant, you can:</p>
+    <ul style="list-style-type: square;">
+        <li>Type a question or message in the input field below and press Enter to submit.</li>
+        <li>The chatbot will respond based on the website's content and knowledge base.</li>
+    </ul>
+</div>""", unsafe_allow_html=True)
 
 # Apply custom CSS for layout styling
-st.markdown("""
-    <style>
+st.markdown("""<style>
     .chatbox {
         border: 2px solid #2196F3;
         padding: 10px;
@@ -131,8 +145,7 @@ st.markdown("""
         overflow-y: scroll;
         background-color: #f1f1f1;
     }
-    </style>
-    """, unsafe_allow_html=True)
+</style>""", unsafe_allow_html=True)
 
 # Initialize a session state for conversation history
 if 'conversation' not in st.session_state:
