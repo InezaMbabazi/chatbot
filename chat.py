@@ -4,23 +4,6 @@ import streamlit as st
 import os
 import requests
 from bs4 import BeautifulSoup
-import nltk
-from nltk.tokenize import word_tokenize
-
-# Set the NLTK data path to the local .nltk_data directory
-nltk.data.path.append('./.nltk_data')
-
-# Function to check if NLTK resources are available
-def check_nltk_resources():
-    try:
-        # Check for the standard punkt tokenizer
-        nltk.data.find('tokenizers/punkt')
-        st.success("NLTK 'punkt' tokenizer is available.")
-    except LookupError:
-        st.error("NLTK 'punkt' tokenizer not found. Please ensure it's available in the .nltk_data directory.")
-
-# Call the function to check resources
-check_nltk_resources()
 
 # Set OpenAI API key
 openai.api_key = st.secrets["openai"]["api_key"]
@@ -40,16 +23,6 @@ except Exception as e:
     st.error(f"Error loading Chatbot CSV data: {str(e)}")
     chatbot_data = {}  # Empty dictionary if loading fails
 
-# Function to preprocess text
-def preprocess_text(text):
-    try:
-        # Use only the standard punkt tokenizer
-        tokens = word_tokenize(text.lower())
-        return tokens
-    except Exception as e:
-        st.error(f"Error processing text: {str(e)}")
-        return []
-
 # Function to fetch and parse content from a website
 def fetch_website_content(url):
     try:
@@ -57,8 +30,7 @@ def fetch_website_content(url):
         response = requests.get(url)
         soup = BeautifulSoup(response.content, 'html.parser')
 
-        # Extract all text from the website
-        # You can customize this part to extract specific content such as paragraphs, headings, etc.
+        # Extract all text from the website (you can customize this part if needed)
         paragraphs = soup.find_all('p')
         website_text = " ".join([para.get_text() for para in paragraphs])
 
@@ -67,7 +39,7 @@ def fetch_website_content(url):
         st.error(f"Error fetching website content: {str(e)}")
         return ""
 
-# Load website content (you can replace this URL with your website's URL)
+# Load website content (replace with your website URL)
 website_url = "https://keplercollege.ac.rw/"  # Replace with your website URL
 website_content = fetch_website_content(website_url)
 
@@ -89,7 +61,7 @@ def get_chatbot_response(user_input):
     if user_input in chatbot_data:
         return chatbot_data[user_input]
     
-    # If the question is not found in the chatbot data, then search the website
+    # If the question is not found in the chatbot data, then use OpenAI to generate a response
     website_response = get_openai_response(user_input, website_content)
     return website_response
 
