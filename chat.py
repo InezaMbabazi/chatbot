@@ -88,7 +88,7 @@ def get_openai_response(question, context):
     try:
         response = openai.ChatCompletion.create(
             model='gpt-3.5-turbo',
-            messages=[
+            messages=[ 
                 {"role": "system", "content": "You are a helpful assistant."},
                 {"role": "user", "content": f"{question}\n\nContext: {context}"}
             ]
@@ -118,7 +118,7 @@ def get_answer_from_csv(user_question):
         if best_match:
             return best_match
         else:
-            return "Sorry, I couldn't find an answer to your question in the database."
+            return None  # Return None if no match is found in CSV
     return "Error loading chatbot data."
 
 # Streamlit UI with header image and instructions
@@ -168,12 +168,16 @@ def handle_user_input():
     user_input = st.session_state.input_text.strip()  # Get the input text
 
     if user_input != "":
-        # Get response from the chatbot CSV data
+        # First check if an answer is available in the CSV
         chatbot_response = get_answer_from_csv(user_input)
-        
-        # If no answer found in the CSV, use OpenAI to generate a response based on website content
-        if chatbot_response == "Sorry, I couldn't find an answer to your question in the database.":
+
+        # If no answer from CSV, use website content
+        if chatbot_response is None:
             chatbot_response = get_openai_response(user_input, website_content)
+        
+        # If no answer from website, use OpenAI
+        if chatbot_response == "":
+            chatbot_response = get_openai_response(user_input, "")
 
         # Add the conversation to session state
         st.session_state.conversation.append({"user": user_input, "chatbot": chatbot_response})
