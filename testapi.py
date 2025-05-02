@@ -1,6 +1,15 @@
+import spacy
+import torch
+from transformers import pipeline
 import re
 import streamlit as st
 from difflib import SequenceMatcher
+
+# Load spaCy model for entity recognition
+nlp = spacy.load("en_core_web_sm")
+
+# Load the HuggingFace transformer pipeline for conversational intent
+conversation_pipeline = pipeline("conversational", model="microsoft/DialoGPT-medium")
 
 # Load and clean chat data
 def load_chat(file_object):
@@ -23,11 +32,9 @@ def build_contextual_pairs(messages, you='M.Prince', her='K Aline'):
         if messages[i]['sender'] == you:
             context = messages[i]['message']
             j = i + 1
-            # Capture all preceding messages from M.Prince
             while j < len(messages) and messages[j]['sender'] == you:
                 context += " " + messages[j]['message']
                 j += 1
-            # Now check the response from K Aline
             if j < len(messages) and messages[j]['sender'] == her:
                 pairs.append((context.strip(), messages[j]['message']))
             i = j
@@ -39,27 +46,27 @@ def build_contextual_pairs(messages, you='M.Prince', her='K Aline'):
 def similarity(a, b):
     return SequenceMatcher(None, a.lower(), b.lower()).ratio()
 
+# Use spaCy for Named Entity Recognition (NER) and intent detection via transformers
+def process_message(user_input):
+    # Use spaCy NER
+    doc = nlp(user_input)
+    entities = [(ent.text, ent.label_) for ent in doc.ents]
+    
+    # Use transformers to detect intent and generate a response
+    result = conversation_pipeline(user_input)
+    intent = result[0]['generated_text']
+    
+    return entities, intent
+
 # Find best match
-def get_reply(user_input, pairs, threshold=0.4):  # Lower threshold for better match
-    # Check for common greetings
-    common_greetings = {
-        "hi": "Hey JP",
-        "hello": "Hey JP",
-        "hey": "Hey JP"
-    }
-    user_input_lower = user_input.lower()
-    
-    if user_input_lower in common_greetings:
-        return common_greetings[user_input_lower]
-    
+def get_reply(user_input, pairs, threshold=0.5):
     best_score = 0
     best_reply = None
-    # Compare with historical context and messages
-    for context, reply in pairs:
-        score = similarity(user_input, context)  # Compare against context
+    for q, a in pairs:
+        score = similarity(user_input, q)
         if score > best_score:
             best_score = score
-            best_reply = reply
+            best_reply = a
     if best_score >= threshold:
         return best_reply
     return "I'm not sure how to respond 😅"
@@ -74,14 +81,16 @@ if chat_file:
     messages = load_chat(chat_file)
     pairs = build_contextual_pairs(messages)
 
-    # Text input for user query
     user_input = st.text_input("You (M.Prince):", "")
 
     if user_input:
-        # Get a reply based on the best matching message
+        # Process the message using NLP (spaCy for entities and transformers for intent)
+        entities, intent = process_message(user_input)
+
+        # Display the named entities and the detected intent
+        st.write(f"Entities: {entities}")
+        st.write(f"Intent: {intent}")
+        
+        # Get the response based on historical context
         reply = get_reply(user_input, pairs)
         st.text_area("Aline:", value=reply, height=100)
-
-    # Clear the input field after response
-    if st.button("Clear Input"):
-        st.text_input("You (M.Prince):", "")
