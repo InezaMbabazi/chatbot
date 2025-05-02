@@ -1,20 +1,20 @@
 import re
 import streamlit as st
 
-# Function to load and clean chat
-def load_chat(filepath):
+# Load and clean chat data
+def load_chat(file_object):
     message_pattern = re.compile(r'^(\d{1,2}/\d{1,2}/\d{2,4}), (\d{1,2}:\d{2}) - ([^:]+): (.+)$')
     messages = []
 
-    with open(filepath, encoding='utf-8') as f:
-        for line in f:
-            match = message_pattern.match(line)
-            if match:
-                _, _, sender, message = match.groups()
-                messages.append({"sender": sender.strip(), "message": message.strip()})
+    for line in file_object:
+        line = line.decode('utf-8') if isinstance(line, bytes) else line
+        match = message_pattern.match(line)
+        if match:
+            _, _, sender, message = match.groups()
+            messages.append({"sender": sender.strip(), "message": message.strip()})
     return messages
 
-# Build message pairs: Your message => Her reply
+# Build message-response pairs
 def build_pairs(messages, you='M.Prince', her='K Aline'):
     pairs = []
     for i in range(len(messages) - 1):
@@ -22,7 +22,7 @@ def build_pairs(messages, you='M.Prince', her='K Aline'):
             pairs.append((messages[i]['message'], messages[i+1]['message']))
     return pairs
 
-# Find a response by similarity (basic)
+# Simple reply logic based on exact or partial match
 def get_reply(user_input, pairs):
     user_input_lower = user_input.lower()
     for q, a in pairs:
@@ -30,17 +30,16 @@ def get_reply(user_input, pairs):
             return a
     return "I'm not sure what to say 😅"
 
-# Streamlit interface
+# Streamlit app interface
 st.title("💬 Chat with Aline (AI version)")
 
-# Upload chat file
+# Upload WhatsApp chat file
 chat_file = st.file_uploader("Upload WhatsApp chat (.txt)", type=["txt"])
 
 if chat_file:
     messages = load_chat(chat_file)
     pairs = build_pairs(messages)
 
-    # Input from user
     user_input = st.text_input("You:", "")
 
     if user_input:
