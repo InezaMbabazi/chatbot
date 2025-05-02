@@ -23,9 +23,11 @@ def build_contextual_pairs(messages, you='M.Prince', her='K Aline'):
         if messages[i]['sender'] == you:
             context = messages[i]['message']
             j = i + 1
+            # Capture all preceding messages from M.Prince
             while j < len(messages) and messages[j]['sender'] == you:
                 context += " " + messages[j]['message']
                 j += 1
+            # Now check the response from K Aline
             if j < len(messages) and messages[j]['sender'] == her:
                 pairs.append((context.strip(), messages[j]['message']))
             i = j
@@ -38,7 +40,7 @@ def similarity(a, b):
     return SequenceMatcher(None, a.lower(), b.lower()).ratio()
 
 # Find best match
-def get_reply(user_input, pairs, threshold=0.4):  # Lower threshold
+def get_reply(user_input, pairs, threshold=0.4):  # Lower threshold for better match
     # Check for common greetings
     common_greetings = {
         "hi": "Hey JP",
@@ -52,11 +54,12 @@ def get_reply(user_input, pairs, threshold=0.4):  # Lower threshold
     
     best_score = 0
     best_reply = None
-    for q, a in pairs:
-        score = similarity(user_input, q)
+    # Compare with historical context and messages
+    for context, reply in pairs:
+        score = similarity(user_input, context)  # Compare against context
         if score > best_score:
             best_score = score
-            best_reply = a
+            best_reply = reply
     if best_score >= threshold:
         return best_reply
     return "I'm not sure how to respond 😅"
