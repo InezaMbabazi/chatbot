@@ -1,9 +1,10 @@
 import re
 import streamlit as st
+from difflib import SequenceMatcher
 
 # Load and clean chat data
 def load_chat(file_object):
-    message_pattern = re.compile(r'^(\d{1,2}/\d{1,2}/\d{2,4}), (\d{1,2}:\d{2}) - ([^:]+): (.+)$')
+    message_pattern = re.compile(r'^\[(\d{1,2}/\d{1,2}/\d{2,4}), (\d{1,2}:\d{2}:\d{2})\] ([^:]+): (.+)$')
     messages = []
 
     for line in file_object:
@@ -14,33 +15,52 @@ def load_chat(file_object):
             messages.append({"sender": sender.strip(), "message": message.strip()})
     return messages
 
-# Build message-response pairs
-def build_pairs(messages, you='M.Prince', her='K Aline'):
+# Build contextual pairs: look at last 2-3 messages before Aline replies
+def build_contextual_pairs(messages, you='M.Prince', her='K Aline'):
     pairs = []
-    for i in range(len(messages) - 1):
-        if messages[i]['sender'] == you and messages[i+1]['sender'] == her:
-            pairs.append((messages[i]['message'], messages[i+1]['message']))
+    i = 0
+    while i < len(messages) - 1:
+        if messages[i]['sender'] == you:
+            context = messages[i]['message']
+            j = i + 1
+            while j < len(messages) and messages[j]['sender'] == you:
+                context += " " + messages[j]['message']
+                j += 1
+            if j < len(messages) and messages[j]['sender'] == her:
+                pairs.append((context.strip(), messages[j]['message']))
+            i = j
+        else:
+            i += 1
     return pairs
 
-# Simple reply logic based on exact or partial match
-def get_reply(user_input, pairs):
-    user_input_lower = user_input.lower()
+# Compare similarity
+def similarity(a, b):
+    return SequenceMatcher(None, a.lower(), b.lower()).ratio()
+
+# Find best match
+def get_reply(user_input, pairs, threshold=0.5):
+    best_score = 0
+    best_reply = None
     for q, a in pairs:
-        if q.lower() in user_input_lower or user_input_lower in q.lower():
-            return a
-    return "I'm not sure what to say 😅"
+        score = similarity(user_input, q)
+        if score > best_score:
+            best_score = score
+            best_reply = a
+    if best_score >= threshold:
+        return best_reply
+    return "I'm not sure how to respond 😅"
 
 # Streamlit app interface
 st.title("💬 Chat with Aline (AI version)")
 
-# Upload WhatsApp chat file
-chat_file = st.file_uploader("Upload WhatsApp chat (.txt)", type=["txt"])
+# Upload chat file
+chat_file = st.file_uploader("Upload your WhatsApp chat (.txt)", type=["txt"])
 
 if chat_file:
     messages = load_chat(chat_file)
-    pairs = build_pairs(messages)
+    pairs = build_contextual_pairs(messages)
 
-    user_input = st.text_input("You:", "")
+    user_input = st.text_input("You (M.Prince):", "")
 
     if user_input:
         reply = get_reply(user_input, pairs)
