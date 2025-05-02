@@ -38,7 +38,18 @@ def similarity(a, b):
     return SequenceMatcher(None, a.lower(), b.lower()).ratio()
 
 # Find best match
-def get_reply(user_input, pairs, threshold=0.5):
+def get_reply(user_input, pairs, threshold=0.4):  # Lower threshold
+    # Check for common greetings
+    common_greetings = {
+        "hi": "Hey JP",
+        "hello": "Hey JP",
+        "hey": "Hey JP"
+    }
+    user_input_lower = user_input.lower()
+    
+    if user_input_lower in common_greetings:
+        return common_greetings[user_input_lower]
+    
     best_score = 0
     best_reply = None
     for q, a in pairs:
